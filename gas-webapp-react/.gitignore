@@ -1,0 +1,6 @@
+# Generados por `npm run build:gas` en frontend-react (no versionar blobs de bundle).
+Assets_js.html
+Assets_css.html
+
+# IDs locales (usar .clasp.json.example como plantilla).
+.clasp.json
