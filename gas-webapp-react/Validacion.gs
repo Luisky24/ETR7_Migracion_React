@@ -1,6 +1,7 @@
 /**
- * Autenticación mínima compatible con el adapter React (mismo contrato array que legacy).
- * Lógica equivalente a ETRugby7/logger/validación.js — sin acoplar este proyecto al legacy.
+ * Autenticación legacy: `validarUsuario` (array). Debe mantenerse alineado con
+ * `ETRugby7/logger/validación.js` hasta biblioteca compartida.
+ * React usa `auth_login_v2` (ver `AuthLoginV2.gs`).
  */
 
 function validarUsuario(claveValidacion) {

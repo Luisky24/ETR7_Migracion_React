@@ -1,0 +1,9 @@
+{
+  "comment_MERGE": "Añadir este bloque dentro de dependencies.libraries cuando ETR7_Shared_Backend esté publicado como biblioteca y se use LIBRARY_MODE (sin symlinks Phase1/Infra). Sustituir libraryId por el Script ID real del proyecto Shared.",
+  "library_entry_ETR7Shared": {
+    "userSymbol": "ETR7Shared",
+    "libraryId": "SCRIPT_ID_DEL_PROYECTO_ETR7_Shared_Backend",
+    "version": "0",
+    "developmentMode": true
+  }
+}

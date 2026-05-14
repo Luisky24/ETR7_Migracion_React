@@ -18,3 +18,15 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
 }
+
+/**
+ * Alias QA manual en el IDE (Run). Equivale a {@link etr7_runtime_selfcheck_v1}.
+ * @return {Object}
+ */
+function test_selfcheck() {
+  const result = etr7_runtime_selfcheck_v1();
+
+  Logger.log(JSON.stringify(result, null, 2));
+
+  return result;
+}
