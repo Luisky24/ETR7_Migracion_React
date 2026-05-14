@@ -6,7 +6,7 @@ Revisión orientada a **validación manual** y detección temprana de acoplamien
 
 - **Transporte único**: `gasTransport` / `callGas` concentran `google.script.run`; fallos registrados con `logTransportFailure` (visible aunque `VITE_ETR7_DEBUG` esté off).
 - **Calendario en feature slice**: contratos, adapters, mappers, service y hook bajo `src/features/calendar/`; la UI de página/componentes no importa transport ni adapters.
-- **Auth**: `authAdapter` encapsula respuesta legacy de `validarUsuario`; `authService` es fachada fina; sesión en `SessionContext`.
+- **Auth**: `authAdapter` consume el boundary estable `auth_login_v2` (GAS); `authService` es fachada fina; sesión en `SessionContext`.
 - **Capabilities**: modelo explícito (`UserCapabilities`, `hasCapability`) sin niveles numéricos en UI.
 - **Routing**: rutas en `AppRouter` + `ROUTES`; guards (`AuthGuard`, `GuestGuard`) separados del feature calendario.
 
@@ -22,7 +22,13 @@ Revisión orientada a **validación manual** y detección temprana de acoplamien
 
 ## Hallazgos / deuda técnica temprana
 
-1. **`SessionContext` / `isSessionReady`**: fijado a `true` con estado inicial leído de `sessionStorage` en el inicializador de `useState`. La fase `lifecycle: 'bootstrap'` del contrato existe pero **no se usa** en runtime; documentado para evitar confusiones futuras.
+**Hardening (2026-05-14):** ver [BOUNDARY_HARDENING_REVIEW.md](../../../docs/BOUNDARY_HARDENING_REVIEW.md) §12–§13. Ajustes aplicados: `PROTECTED_ROUTE_PATHS` con `/calendar`, redirects vía `AUTH_REDIRECTS`, lifecycle de sesión simplificado (`guest` \| `authenticated`, sin `isSessionReady` / `BootstrapWait`), validación canónica de `estadoPartido` en adapter alineada con boundary GAS, copy de login neutro, tipos wire (`GasCalendarMatchV2.estadoPartido: string`, rol auth como `AuthRole` tras parse).
+
+Pendiente menor documentado allí: mapeo M/F → etiquetas GAS en `calendar.service`, deps opcionales en `useCalendarMatches`.
+
+## Hallazgos históricos (pre-hardening; mayormente resueltos)
+
+1. ~~**`SessionContext` / `isSessionReady` / `bootstrap`:**~~ resuelto — modelo alineado con lectura síncrona de `sessionStorage`.
 2. **`useCalendarMatches`**: usa `window.setTimeout` para diferir el primer fetch (compatibilidad ESLint). Comportamiento correcto; revisar si en el futuro se prefiere patrón explícito “fetch on demand” sin `window` en tests.
 3. **`Object.values` en `CalendarMatchesPage`**: convierte el mapa de DTOs en lista para la tabla; orden depende del motor JS; aceptable hasta que el contrato exponga orden estable (p. ej. `orderedIds`).
 4. **`authService.logout`**: stub sin efecto remoto (por diseño actual); sesión se limpia en cliente. Coherente con alcance actual.

@@ -5,12 +5,14 @@ import { RootLayout } from '@/layouts/RootLayout'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { CalendarMatchesPage } from '@/features/calendar/pages/CalendarMatchesPage'
+import { MatchLineupsPage } from '@/features/alineaciones/pages/MatchLineupsPage'
+import { TeamLineupContextPage } from '@/features/alineaciones-v2/pages/TeamLineupContextPage'
 import { MenuPage } from '@/pages/MenuPage'
 import { AuthGuard, GuestGuard } from '@/router/guards'
 import { ROUTES } from '@/router/routes'
 
 function AppNav() {
-  const { isSessionReady, lifecycle, state } = useSession()
+  const { lifecycle, state } = useSession()
   const canCalendar =
     state.status === 'authenticated' && hasCapability(state.user.capabilities, 'canAccessCalendar')
 
@@ -19,10 +21,10 @@ function AppNav() {
       <NavLink to={ROUTES.home} end>
         Inicio
       </NavLink>
-      {isSessionReady && lifecycle === 'guest' ? (
+      {lifecycle === 'guest' ? (
         <NavLink to={ROUTES.login}>Acceso</NavLink>
       ) : null}
-      {isSessionReady && lifecycle === 'authenticated' ? (
+      {lifecycle === 'authenticated' ? (
         <>
           <NavLink to={ROUTES.menu}>Menú</NavLink>
           {canCalendar ? <NavLink to={ROUTES.calendar}>Calendario</NavLink> : null}
@@ -66,6 +68,22 @@ export function AppRouter() {
           element={
             <AuthGuard>
               <CalendarMatchesPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="calendar/lineups"
+          element={
+            <AuthGuard>
+              <MatchLineupsPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="calendar/team-lineup-context"
+          element={
+            <AuthGuard>
+              <TeamLineupContextPage />
             </AuthGuard>
           }
         />

@@ -33,5 +33,8 @@ export const defaultSessionState: SessionGuestState = {
   user: null,
 }
 
-/** Fases de lifecycle expuestas por SessionContext (bootstrap = antes de leer sessionStorage). */
-export type SessionLifecycle = 'bootstrap' | 'guest' | 'authenticated'
+/**
+ * Fases de lifecycle tras resolver la sesión en el primer render (lectura síncrona de sessionStorage).
+ * No hay fase intermedia: el estado inicial ya es `guest` o `authenticated`.
+ */
+export type SessionLifecycle = 'guest' | 'authenticated'

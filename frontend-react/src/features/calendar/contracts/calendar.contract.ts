@@ -53,3 +53,27 @@ export interface CalendarFilters {
   /** Reservado: búsqueda libre en capa UI futura. */
   readonly searchText?: string
 }
+
+/**
+ * Objeto match tal como lo emite `calendar_getMatches_v2` (GAS).
+ * Contrato oficial backend; sin tuplas posicionales.
+ * `estadoPartido` en wire es string; la normalización canónica ocurre en GAS — el adapter solo valida.
+ */
+export interface GasCalendarMatchV2 {
+  readonly idEncuentro: string
+  readonly grupo: string
+  readonly equipoLocal: string
+  readonly equipoVisitante: string
+  readonly hora: string
+  readonly campo: string
+  readonly resultado: string
+  readonly estadoAlineaciones: string
+  readonly estadoPartido: string
+  readonly referenciaEncuentro: string
+}
+
+/** Respuesta estable del boundary GAS `calendar_getMatches_v2`. */
+export interface GasCalendarGetMatchesV2Response {
+  readonly version: 2
+  readonly matches: readonly GasCalendarMatchV2[]
+}

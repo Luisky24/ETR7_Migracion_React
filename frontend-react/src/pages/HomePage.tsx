@@ -3,7 +3,7 @@ import { useSession } from '@/contexts/SessionContext'
 import { ROUTES } from '@/router/routes'
 
 export function HomePage() {
-  const { lifecycle, isSessionReady } = useSession()
+  const { lifecycle } = useSession()
 
   return (
     <article className="page-card max-w-xl">
@@ -13,10 +13,7 @@ export function HomePage() {
         mediante almacenamiento de sesión controlado.
       </p>
       <p className="mt-2 text-sm text-slate-500">
-        Estado de sesión:{' '}
-        <span className="font-medium text-slate-800">
-          {!isSessionReady ? 'inicializando…' : lifecycle}
-        </span>
+        Estado de sesión: <span className="font-medium text-slate-800">{lifecycle}</span>
       </p>
       <p className="mt-6 flex flex-wrap gap-3">
         <Link

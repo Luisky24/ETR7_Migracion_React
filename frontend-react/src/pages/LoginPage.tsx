@@ -9,7 +9,8 @@ export function LoginPage() {
     <article className="page-card max-w-md">
       <h1 className="text-xl font-semibold">Acceso</h1>
       <p className="mt-2 text-sm text-slate-600">
-        Introduce la credencial validada en el servidor (GAS <code className="text-xs">validarUsuario</code>).
+        Introduce la credencial de acceso. Si tienes problemas de conexión, revisa la red y que la
+        aplicación esté publicada; los detalles técnicos aparecen en la consola del navegador.
       </p>
 
       <form
@@ -38,7 +39,8 @@ export function LoginPage() {
             <p>{authError}</p>
             {authError.includes('No se pudo conectar') ? (
               <p className="mt-2 text-xs text-red-700/90">
-                Comprueba la red, que la Web App GAS esté desplegada y que la consola muestre el detalle del fallo de transporte.
+                Comprueba la red y que la aplicación esté disponible; revisa la consola para el detalle del
+                fallo de conexión.
               </p>
             ) : null}
           </div>

@@ -6,10 +6,10 @@
 import { log } from '@/core/debug'
 import { gasTransport } from '@/transport/gasTransport'
 import type { CalendarFilters, CalendarMatchesResponse } from '../contracts/calendar.contract'
-import { adaptObtenerDatosInformacionMatches } from '../adapters/calendar.adapter'
+import { adaptCalendarGetMatchesV2Response } from '../adapters/calendar.adapter'
 
-const GAS_OBTENER_DATOS_INFORMACION = 'obtenerDatosInformacion'
-const SUBPESTANIA_CALENDARIO = 'Calendario'
+/** Boundary oficial GAS ↔ React (calendario read-only). */
+const GAS_CALENDAR_GET_MATCHES_V2 = 'calendar_getMatches_v2'
 
 function categoryToGasLabel(categoria: CalendarFilters['categoria']): 'Masculina' | 'Femenina' {
   return categoria === 'M' ? 'Masculina' : 'Femenina'
@@ -27,15 +27,11 @@ export const calendarService = {
     })
     try {
       const raw: unknown = await gasTransport.call<unknown>(
-        GAS_OBTENER_DATOS_INFORMACION,
+        GAS_CALENDAR_GET_MATCHES_V2,
         categoriaTexto,
         filters.fase,
-        SUBPESTANIA_CALENDARIO,
       )
-      const adapted = adaptObtenerDatosInformacionMatches(raw, {
-        categoria: filters.categoria,
-        fase: filters.fase,
-      })
+      const adapted = adaptCalendarGetMatchesV2Response(raw)
       log.debug('calendar.getMatches.ok', {
         rowCount: Object.keys(adapted.matchesByEncuentroId).length,
       })

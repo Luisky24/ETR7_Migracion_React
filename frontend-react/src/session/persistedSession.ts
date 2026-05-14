@@ -27,12 +27,12 @@ function isAuthRole(value: unknown): value is AuthRole {
   return value === 'staff' || value === 'lcv' || value === 'arbitro' || value === 'team'
 }
 
-function isUserCapabilities(value: unknown): value is UserCapabilities {
+function isUserCapabilities(value: unknown): value is Partial<UserCapabilities> {
   if (typeof value !== 'object' || value === null) {
     return false
   }
   const o = value as Record<string, unknown>
-  return CAPABILITY_KEYS.every((k) => typeof o[k] === 'boolean')
+  return CAPABILITY_KEYS.every((k) => o[k] === undefined || typeof o[k] === 'boolean')
 }
 
 function isTeamSnapshot(value: unknown): value is AuthTeamSnapshot {
@@ -86,7 +86,7 @@ export function parsePersistedSession(raw: string | null): PersistedSessionV1 | 
   if (!isPersistedUser(o.user)) {
     return null
   }
-  return { v: PERSISTED_SESSION_VERSION, user: o.user }
+  return { v: PERSISTED_SESSION_VERSION, user: normalizePersistedUser(o.user) }
 }
 
 export function serializePersistedSession(snapshot: PersistedSessionV1): string {

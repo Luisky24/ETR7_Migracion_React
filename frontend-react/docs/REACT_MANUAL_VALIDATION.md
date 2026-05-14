@@ -1,5 +1,8 @@
 # ETR7 React — Checklist validación manual (React ↔ GAS)
 
+> **Fuente única consolidada:** el proceso oficial reproducible (escenarios con precondiciones/pasos/señales de fallo, multiusuario, parity calendario, deployment, errores, rollback) está en **[`docs/OFFICIAL_QA_CHECKLIST.md`](../../../docs/OFFICIAL_QA_CHECKLIST.md)** en la raíz del workspace `Desarrollo_GAS/`.  
+> Este archivo se mantiene como **referencia rápida** de tablas y entorno; ante divergencia, prevalece el checklist oficial.
+
 Objetivo: validar el ciclo completo **UI → hook → service → adapter → transport → GAS** antes de seguir migrando.
 
 ## Entorno
@@ -24,7 +27,7 @@ Objetivo: validar el ciclo completo **UI → hook → service → adapter → tr
 
 | # | Caso | Pasos | Esperado |
 |---|------|-------|----------|
-| S1 | Bootstrap | Recargar con sesión persistida | Estado autenticado coherente; consola (si debug ON): `session.bootstrap` una vez por montaje del provider. |
+| S1 | Sesión tras reload | Recargar con sesión persistida | Estado autenticado coherente; consola (si debug ON): `session.bootstrap` una vez por montaje del provider (nombre de log histórico; lifecycle sin fase intermedia). |
 | S2 | Refresh navegador | En `#/menu` o `#/calendar`, F5 | Sesión restaurada desde `sessionStorage` (misma UX que antes del refresh). |
 | S3 | Logout | Cerrar sesión desde menú | Navegación a `#/login`; consola: `session.logout`. |
 
@@ -52,7 +55,7 @@ Objetivo: validar el ciclo completo **UI → hook → service → adapter → tr
 | # | Caso | Esperado |
 |---|------|----------|
 | G1 | Carga Web App | `ReactHost.html` incluye bundle; `#root` monta sin error en consola. |
-| G2 | Funciones expuestas | `validarUsuario`, `obtenerDatosInformacion` disponibles en el proyecto script enlazado al host. |
+| G2 | Funciones expuestas | Host: **`auth_login_v2`** (boundary login React), `validarUsuario` (legacy / misma fuente lógica). Competición (`ETRugby7`): **`calendar_getMatches_v2`**, `obtenerDatosInformacion`, `auth_login_v2`, `validarUsuario` según despliegue (host+biblioteca o proyecto unificado). React login solo usa `auth_login_v2`. |
 
 ## Regresión rápida
 

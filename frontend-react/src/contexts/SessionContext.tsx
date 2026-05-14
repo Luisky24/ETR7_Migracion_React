@@ -24,13 +24,11 @@ import {
   writePersistedSessionToStorage,
 } from '@/session/persistedSession'
 import { getSessionStorageSafe } from '@/session/sessionStorageBridge'
-import { ROUTES } from '@/router/routes'
+import { AUTH_REDIRECTS } from '@/router/navigation.model'
 
 export interface SessionContextValue {
-  /** Fuente de verdad de sesión en React; tras bootstrap refleja guest o authenticated. */
+  /** Fuente de verdad de sesión en React (lectura inicial síncrona desde sessionStorage). */
   state: SessionState
-  /** false hasta completar lectura/validación de sessionStorage (rehidratación). */
-  isSessionReady: boolean
   lifecycle: SessionLifecycle
   isAuthLoading: boolean
   authError: string | null
@@ -108,7 +106,6 @@ function readInitialSessionFromBrowserStorage(): SessionState {
 export function SessionProvider({ children }: SessionProviderProps) {
   const navigate = useNavigate()
   const [state, setState] = useState<SessionState>(readInitialSessionFromBrowserStorage)
-  const isSessionReady = true
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
 
@@ -130,7 +127,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
         if (result.ok) {
           log.debug('session.login.success', { role: result.data.role })
           const next = buildAuthenticatedSession({
-            id: crypto.randomUUID(),
+            id: result.data.userId,
             displayName: result.data.displayName,
             role: result.data.role,
             capabilities: result.data.capabilities,
@@ -138,7 +135,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
           })
           persistUser(next.user)
           setState(next)
-          void navigate(ROUTES.menu, { replace: true })
+          void navigate(AUTH_REDIRECTS.postLogin, { replace: true })
         } else {
           log.warn('session.login.denied', { code: result.error.code })
           setAuthError(result.error.message)
@@ -159,7 +156,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     authService.logout()
     clearPersistedUser()
     setState(defaultSessionState)
-    void navigate(ROUTES.login, { replace: true })
+    void navigate(AUTH_REDIRECTS.requireAuth, { replace: true })
   }, [navigate])
 
   const lifecycle: SessionLifecycle = useMemo(() => {
@@ -169,14 +166,13 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const value = useMemo<SessionContextValue>(
     () => ({
       state,
-      isSessionReady,
       lifecycle,
       isAuthLoading,
       authError,
       login,
       logout,
     }),
-    [state, isSessionReady, lifecycle, isAuthLoading, authError, login, logout],
+    [state, lifecycle, isAuthLoading, authError, login, logout],
   )
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>

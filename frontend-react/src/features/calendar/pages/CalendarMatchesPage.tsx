@@ -71,7 +71,7 @@ export function CalendarMatchesPage() {
           <CalendarErrorState message={error.message} onRetry={() => void refetch(filters)} />
         ) : null}
         {showEmpty ? <CalendarEmptyState /> : null}
-        {showTable ? <CalendarMatchesTable matches={matches} /> : null}
+        {showTable ? <CalendarMatchesTable matches={matches} calendarFilters={filters} /> : null}
       </div>
     </article>
   )

@@ -7,7 +7,8 @@ import { ROUTES } from '@/router/routes'
 
 export const PUBLIC_ROUTE_PATHS = [ROUTES.home, ROUTES.login] as const
 
-export const PROTECTED_ROUTE_PATHS = [ROUTES.menu] as const
+/** Rutas que exigen `AuthGuard` en `AppRouter` — única lista de referencia para ownership. */
+export const PROTECTED_ROUTE_PATHS = [ROUTES.menu, ROUTES.calendar, ROUTES.calendarLineups] as const
 
 export type PublicRoutePath = (typeof PUBLIC_ROUTE_PATHS)[number]
 export type ProtectedRoutePath = (typeof PROTECTED_ROUTE_PATHS)[number]
