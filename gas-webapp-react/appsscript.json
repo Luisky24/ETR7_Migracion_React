@@ -1,6 +1,14 @@
 {
   "timeZone": "Europe/Madrid",
-  "dependencies": {},
+  "dependencies": {
+    "libraries": [
+          {
+            "userSymbol": "ETR7Competition",
+            "libraryId": "1JDe43gm-BXR3X55V3z9Qvtm7601Xx4x1tm6roUhb_XETDIWDwsWB3HR9",
+            "version": "9"
+          }
+        ]
+},
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
   "webapp": {
