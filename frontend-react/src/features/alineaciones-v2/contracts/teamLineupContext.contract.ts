@@ -71,6 +71,10 @@ export interface TeamLineupContextFlagsDto {
 export interface TeamLineupContextMetadataDto {
   readonly version: number
   readonly serverTime: string
+  /**
+   * Reservado para locking optimista (Fase 3+). El runtime React lo expone en
+   * `LineupRuntimeState.serverEtag` pero no lo usa para validar SAVE/CONFIRM en Fase 2.
+   */
   readonly etag: string | null
 }
 

@@ -1,0 +1,60 @@
+Antes de pasara al amigración de otra página con sus funcionalidades vamos a proceder a dejar la página 'Alineaciones' correcta con sus funcionalidades.
+
+Empezamos con el front:
+
+1.- En el literal 'Alineación por Equipo' debe aparecer 'Alineación de ' + equipo al que corresponde la alineación y que fue seleccionado desde Calendario
+
+2.- En el area para encuentro, tendremos la siguiente estrucutura:
+    2.1.- Una linea donde tendremos 'Encuentro ' + el encuentro para la alineación del equipo que se selecciono en calendario con el formato Equipo Local + ' - ' + Equipo Visitante
+    2.2.- Línea en blanco
+    2.3.- Linea dividida en tres zonas, con la siguinete información:
+        2.3.1.- Izquierda: 'Grupo ' + Grupo al que pertenece el encuentro y que se tiene en calendario cuando se selecciona la alineación
+        2.3.2.- Centro: 'Campo ' + campo donde se jugara el partido y también disponible en calendario
+        2.3.3.- Deecha: 'Hora ' + hora en la que se disputa el encuentro en formato HH:MM y también disponible en calendario
+
+3.- Dewsparece todo lo referente a Workflow
+4.- Debajo de 'Alineaciones por Equipo' en la página actual también quitamos las lineas que salen actualmente pero el boton de volver a calendario
+
+5.- Construimos en React un componente formado por los siguentes subcomponentes y que denominamos alineacion_jugador:
+    5.1.- Elemento de texto donde figrara el nombre del jugador y que no será modificable
+    5.2.- Boton con T de titular y que estara activo o inactivo
+    5.3.- Botón con S de Suplente y que estará activo o inactivo
+    5.4.- Boton con C de capitán y que estará activop o inactivo 
+    5.5.- Campo de input númerio para el dorsal y que podrá seleccionarse por teclado o bien medinate flechas para selección.
+
+6.- Componente que engloba a tantos componentes alineacion_juagador como jugadores se reciben
+7.- Por encima de este componente tendremos una cabecera por encima de cada subcomponente con las siguientes literales, Jugadores, Titulares, Suplentes, Capitan, Dorsal
+8.- El conjunto de los puntos 6 y 7 sustituye a lo que hoy aparece en Jugadores
+
+9.- Funcionalidades:
+    9.1.- No puede haber un jugador marcado con titular y suplente
+    9.2.- Si se marca un jugador como suplente y estaba como titular se desmarca en esta posición y viceversa
+    9.3.- Un jugador puede estar sin marcar alguna
+    9.4.- Si un jugador tiene una marca de titular o suplente y se vuelve a pulsar esa marca que da desmarcado, excepto en el caso del 9.2
+    9.5.- La marca de capitán siempre debe estar asociada a un titular, si esta marcado para un titular y este deja de serlo la marca decapitan se desactiva
+    9.6.- Si una marca de capitán se pulsa en un jugador y otro la tenía se desactiva en este último
+    9.7.- Si una marca decapitan se pulsa y no existe ningún otro jugador con la misma el jugador donde estaba asignada su indcador sedesactiva
+    9.8.- Una alineación cerrada será mostrada con todos los campos bloqueados ya que no se puede modificar
+
+10.- Funcinalidades de integridad:
+    10.1.- No puede haber mas de siete jugadores titulares para Confirmar o Guardar el acta
+    10.2.- Para guardar un acta si puede haber menos de siete titulares
+    10.3.- No puede haber mas de cinco suplentes cuando se Confirma el acta o se guarda
+    10.4.- Cuando se guarda si puede haber menos de cino suplentes e incluso ninguno
+    10.5.- Solo se admite un capitán
+    10.6.- Los dorsales entre 1 y 99
+    10.7.- Los datos de delegado y entrenador son obligatorios para confirmar pero no para guardar
+    10.8.- El concepto Guardar, permite guardar lo que se lleve de acta  y permite ser ecuperada para continuar con su finalización, se puede guardar todaslas veces que se quiera y cada guardado sustituye en su totalidad al que este almacenado. De igual manera marca el encuentro como 'Alineación en curso'
+    10.9.- El concepto Confirmar, hace que toda la alineación cumpla todos los condicionantes y marca esta como Confirmada y también en calendario como ' Alineación Cerrada'
+
+11.- Recuperar Alineación:
+    11.1.- Se busca la alineación para el encuentro y equipo seleccionado en calendario, la búsqueda sera en la carpeta:
+        Carpeta: '/Competicion_'+ &1 + '/Fase' + &2 + '_' + &1, donde &1, es 'M' o 'F' di la categoría es 'Masculino' o 'Masculina' para el primer caso y 'Femenino' o 'Femenina' para el segundo y &2 sera 1 ó 2 en función de la fase seleccionada en calendario, que son 'Fase I' o 'Fase II' respectivamente 
+
+        11.1.1.- El nombre del sheet donde se encuentran las alineaciones es el nombre del equipo:
+        11.1.2.- Las hjas de cada encuentro tendran el siguiente formato 'ENC_' + $1 + '_' + Equipo Local + ' - ' + Equipo Visitante, donde $1 corresponde al número de encuentro guardado en el libro y que se aumenta en uno cada vez que se guarda por primera vez una nueva alineación
+        11.1.3.- Buscamos de entre las hojas que tenga una que se corresponda con el encuentro seleccionado, coincideindo el equipo local y visitante con el seleccionado parala alineación
+        11.1.4.- Si no se encuentra el del encuentro del punto 11.1.3 buscamos el que tenga el ordinal mayor de guardado
+        11.1.5.- Si el 11.1.5 tampoco devuelve algo buscamos los juagadore del equipo como actualmente 
+    
+

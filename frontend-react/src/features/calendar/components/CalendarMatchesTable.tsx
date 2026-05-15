@@ -4,9 +4,11 @@ import { useSession } from '@/contexts/SessionContext'
 import { calendarRecordKeyForDto } from '../adapters/calendar.adapter'
 import type { CalendarCategory, CalendarMatchDto, CalendarPhase } from '../contracts/calendar.contract'
 import { ROUTES } from '@/router/routes'
-import { buildTeamLineupContextSearchParams } from '@/features/alineaciones-v2/utils/teamLineupContextQuery'
-import { legacyNivelAccesoFromRole } from '@/features/alineaciones-v2/utils/legacyAccessLevel'
-import { sessionOperationalTeamName } from '@/features/alineaciones-v2/utils/sessionTeam'
+import {
+  buildTeamLineupContextSearchParams,
+  legacyNivelAccesoFromRole,
+  sessionOperationalTeamName,
+} from '@/features/alineaciones-v2'
 
 const ESTADO_PARTIDO_LABEL: Record<string, string> = {
   sin_alineacion: 'Sin alineación',
