@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { isLocalSpaDevMode } from '@/app/localDevMode'
 import { useSession } from '@/contexts/SessionContext'
+import { LOCAL_DEV_CREDENTIAL_HINT } from '@/transport/localDev/mockAuthLogin'
 
 export function LoginPage() {
   const { login, isAuthLoading, authError } = useSession()
-  const [credential, setCredential] = useState('')
+  const localDev = isLocalSpaDevMode()
+  const [credential, setCredential] = useState(localDev ? LOCAL_DEV_CREDENTIAL_HINT : '')
 
   return (
     <article className="page-card max-w-md">
@@ -12,6 +15,13 @@ export function LoginPage() {
         Introduce la credencial de acceso. Si tienes problemas de conexión, revisa la red y que la
         aplicación esté publicada; los detalles técnicos aparecen en la consola del navegador.
       </p>
+
+      {localDev ? (
+        <p className="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900" role="status">
+          Modo desarrollo local: el transporte GAS está simulado. Usa cualquier credencial no vacía (p. ej.{' '}
+          <code className="font-mono text-xs">{LOCAL_DEV_CREDENTIAL_HINT}</code>) y pulsa Entrar.
+        </p>
+      ) : null}
 
       <form
         className="mt-6 flex flex-col gap-4"

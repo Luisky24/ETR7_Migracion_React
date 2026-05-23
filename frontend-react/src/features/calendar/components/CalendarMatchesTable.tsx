@@ -9,6 +9,7 @@ import {
   legacyNivelAccesoFromRole,
   sessionOperationalTeamName,
 } from '@/features/alineaciones-v2'
+import { buildMatchReportSearchParams } from '@/features/match-report/utils/matchReportQuery'
 
 const ESTADO_PARTIDO_LABEL: Record<string, string> = {
   sin_alineacion: 'Sin alineación',
@@ -64,6 +65,9 @@ export function CalendarMatchesTable({ matches, calendarFilters }: CalendarMatch
               <th scope="col" className="px-3 py-3 sm:px-4">
                 Contexto equipo
               </th>
+              <th scope="col" className="px-3 py-3 sm:px-4">
+                Acta
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -86,6 +90,9 @@ export function CalendarMatchesTable({ matches, calendarFilters }: CalendarMatch
                       match: m,
                     })
                   : null
+              const actaQs = buildMatchReportSearchParams({ calendarFilters, match: m })
+              const actaOpenable =
+                m.estadoPartido === 'acta_abierta' || m.estadoPartido === 'acta_cerrada'
 
               return (
                 <tr key={`${m.encuentroId}|${m.referenciaEncuentro}`} className="hover:bg-slate-50/80">
@@ -123,6 +130,18 @@ export function CalendarMatchesTable({ matches, calendarFilters }: CalendarMatch
                         className="text-sm font-medium text-indigo-700 underline-offset-2 hover:text-indigo-900 hover:underline"
                       >
                         Mi contexto
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 sm:px-4">
+                    {actaOpenable ? (
+                      <Link
+                        to={`${ROUTES.matchReport}?${actaQs}`}
+                        className="text-sm font-medium text-emerald-800 underline-offset-2 hover:text-emerald-950 hover:underline"
+                      >
+                        Acta React
                       </Link>
                     ) : (
                       <span className="text-xs text-slate-400">—</span>

@@ -1,0 +1,10 @@
+- En el grupo acta del encuentro deben ir centradas todas las líneas, excepto Volver Calendario que se le debe buscar una mejor ubicación.
+
+- EL grupo marcador, debe ocupar el mismo ancho que el grupo acta. 
+    > El resultado centrado
+    > El estado del resultado más pequeño y centrado
+    > La clasificación se quita y los datos de puntuación se llevan al grupo de Resultado.
+
+- El grupo Cierre de acta desaparece todo excepto los botones, el total de este grupo se lleva al grupo marcador junto con los datos de clasificación que también llevamos
+
+- Se debe generar un jugador 'ficticio' en cada equipo para cuando se producen ensayos de castigo y que suponen un Ensayo y su transformación, estara situado al final de la lista de jugadores. Los puntos se contabilizan como los de cualquier otro jugador

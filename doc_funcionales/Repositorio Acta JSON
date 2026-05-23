@@ -1,0 +1,20 @@
+- Tendremos una carpeta dentro de cada carpeta de la competición, una para el masculino y otra para el femenino son las que tenemos, el nombre de la carpeta se construye de la sigueinte manera:
+        1.- 'Competicion_' + X1
+        2.- La varibale X1 toma los siguientes posibles valores:
+            - 'M' si la categoria es Masculino o Masculina o M
+            - 'F' si la categoria es Femenino o Femenina o F
+
+    - En función de la categoria se graba ela acta de cada equipo de un encuentro en la carpeta correpondiente.
+        a.- El formato del nombre de la carpeta es 'ACT_Fase' + V1 + '_' + Encuentro 
+        b.- Significado de las variables:
+            b.1.- V1, tomara el valor 1 o 2 en función de la fase que desde el que se solicta la alineación en calendario si Fase I toma 1 y si Fase II toma 2
+
+
+
+Contrato
+
+Primera vez acta
+
+Siguientes veces acta
+
+Actualizar indicadores en calendario

@@ -8,6 +8,8 @@ export const ROUTES = {
   calendarLineups: '/calendar/lineups',
   /** Contexto operativo por equipo (boundary v2); query: `categoria`, `fase`, `rk`, `equipo`, snapshot opcional. */
   calendarTeamLineupContext: '/calendar/team-lineup-context',
+  /** Acta React; query: `categoria`, `fase`, `rk` (o `encuentroId`) + snapshot del encuentro. */
+  matchReport: '/calendar/match-report',
 } as const
 
 export type AppRoutePath = (typeof ROUTES)[keyof typeof ROUTES]

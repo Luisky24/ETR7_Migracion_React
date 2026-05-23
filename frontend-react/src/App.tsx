@@ -1,11 +1,23 @@
 import { BrowserRouter, HashRouter } from 'react-router-dom'
 import { appConfig } from '@/app/appConfig'
+import { LocalDevJsonWarningBanner } from '@/components/LocalDevJsonWarningBanner'
+import { StagingEnvironmentBanner } from '@/components/StagingEnvironmentBanner'
 import { SessionProvider } from '@/contexts/SessionContext'
 import { AppRouter } from '@/router/AppRouter'
+
+function EnvironmentBanners() {
+  return (
+    <>
+      <LocalDevJsonWarningBanner />
+      <StagingEnvironmentBanner />
+    </>
+  )
+}
 
 function RoutedApp() {
   return (
     <SessionProvider>
+      <EnvironmentBanners />
       <AppRouter />
     </SessionProvider>
   )

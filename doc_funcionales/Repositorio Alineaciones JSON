@@ -1,0 +1,30 @@
+    - Tendremos una carpeta dentro de cada carpeta de la competición, una para el masculino y otra para el femenino son las que tenemos, el nombre de la carpeta se construye de la sigueinte manera:
+        1.- 'Competicion_' + X1
+        2.- La varibale X1 toma los siguientes posibles valores:
+            - 'M' si la categoria es Masculino o Masculina o M
+            - 'F' si la categoria es Femenino o Femenina o F
+
+    - En función de la categoria se graba la alineación de cada equipo de un encuentro en la carpeta correpondiente.
+        a.- El formato del nombre de la carpeta es 'ALI_Fase' + V1 + '_' + Equipo Alineación +'_(' + Encuentro + ')'
+        b.- Significado de las variables:
+            b.1.- V1, tomara el valor 1 o 2 en función de la fase que desde el que se solicta la alineación en calendario si Fase I toma 1 y si Fase II toma 2
+
+    - Funcionalidades para las alineaciones:
+        a.- Cuando se solicita una alineación se desde un encuentro en calendario construimos la clave de fichero como se ha indicado anteriormente
+            a.1.- Si existe devolvemos la alineación
+            a.2.- Si no existe buscamos la última alineación consolidada para ese equipo, esta alineación se encuentra en el indice_ultima_alineacion_x_equipo, que definermos más adelante
+                a.2.1.- Si existe devolvemos esta clasificación
+                a.2.2.- Si no existe buscamos en alineaciones como se hace actualmente para este caso.
+
+        b.- El formato en cada fichero será el equivalente al actual almacenado en sheet y debe proponerlo ChatGPT
+        c.- Este proceso sustituye al almacenamiento en sheet pero su lógica es smilar, revisar si queda algo sin contemplar y que actualmente se tiene en cuenta
+
+    - Fichero indice_ultima_alineacion_equipo, en este fichero formato JSON, se guarda para cada equipo la clave de la última alineación consolidada.
+        a.- Se actualiza para cada equipo cuando se confirma una alineación y esta se ha grabado de forma correcta, es decir es el último paso.
+        b.- Si no existe una entrada para el equipo se añade.
+
+Con estos datos revisar dudas o propuestas que puedan ayudar a una mejor estructura y funcionamiento del almacén.
+Se desea opinión si este sistema es más rápido que el de sheet.
+
+
+    

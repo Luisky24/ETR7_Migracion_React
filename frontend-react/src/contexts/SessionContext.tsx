@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { isLocalSpaDevMode } from '@/app/localDevMode'
 import { log } from '@/core/debug'
 import { authService } from '@/services/authService'
 import {
@@ -112,6 +113,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   useEffect(() => {
     log.debug('session.bootstrap', {
       authenticated: state.status === 'authenticated',
+      localDev: isLocalSpaDevMode(),
     })
     // Solo traza de arranque; no reaccionar a cambios posteriores de sesión.
     // eslint-disable-next-line react-hooks/exhaustive-deps

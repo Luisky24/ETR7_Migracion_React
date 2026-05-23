@@ -1,9 +1,14 @@
 /**
  * Único punto de contacto con `google.script.run`.
  * Sin lógica de negocio; solo invocación, promesas, timeout y errores de transporte.
+ *
+ * - `MODE === 'gas'` (build:gas / Web App): siempre `google.script.run` real.
+ * - `MODE !== 'gas'` (npm run dev): despacha a `mockGasHandlers` — no válido para staging federativo.
  */
 
-import { logTransportFailure } from '@/core/debug'
+import { isLocalSpaDevMode } from '@/app/localDevMode'
+import { log, logTransportFailure } from '@/core/debug'
+import { dispatchLocalDevMockGasCall } from './localDev/mockGasHandlers'
 
 const DEFAULT_TIMEOUT_MS = 30_000
 
@@ -11,7 +16,7 @@ export interface GasCallOptions {
   timeoutMs?: number
 }
 
-/** Referencia no opcional a `google.script.run` tras comprobar entorno. */
+/** Referencia no opcional a `google.script.run` tras comprobar entorno (solo build GAS). */
 function getGasRun() {
   const run = window.google?.script?.run
   if (!run) {
@@ -40,10 +45,20 @@ function toError(reason: unknown): Error {
   return new Error('Error desconocido en la llamada a GAS')
 }
 
+async function callGasViaMock<T>(functionName: string, args: unknown[]): Promise<T> {
+  log.debug('localDev.transport.call', { functionName, argCount: args.length })
+  const result = await dispatchLocalDevMockGasCall(functionName, args)
+  return result as T
+}
+
 /**
  * Invoca una función del servidor GAS por nombre y devuelve el resultado tipado.
  */
 export async function callGas<T>(functionName: string, args: unknown[], options?: GasCallOptions): Promise<T> {
+  if (isLocalSpaDevMode()) {
+    return callGasViaMock<T>(functionName, args)
+  }
+
   const run = getGasRun()
   const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS
 

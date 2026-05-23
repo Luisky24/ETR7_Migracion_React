@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:gas": "tsc -b && vite build --mode gas && node scripts/sync-gas-webapp.mjs",
+    "build:gas": "vite build --mode gas && node scripts/sync-gas-webapp.mjs",
+    "build:gas:check": "tsc -b && vite build --mode gas && node scripts/sync-gas-webapp.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -7,6 +7,7 @@ import { LoginPage } from '@/pages/LoginPage'
 import { CalendarMatchesPage } from '@/features/calendar/pages/CalendarMatchesPage'
 import { MatchLineupsPage } from '@/features/alineaciones'
 import { TeamLineupContextPage } from '@/features/alineaciones-v2'
+import { MatchReportPage } from '@/features/match-report/pages/MatchReportPage'
 import { MenuPage } from '@/pages/MenuPage'
 import { AuthGuard, GuestGuard } from '@/router/guards'
 import { ROUTES } from '@/router/routes'
@@ -84,6 +85,14 @@ export function AppRouter() {
           element={
             <AuthGuard>
               <TeamLineupContextPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="calendar/match-report"
+          element={
+            <AuthGuard>
+              <MatchReportPage />
             </AuthGuard>
           }
         />
