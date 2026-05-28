@@ -3,6 +3,9 @@
  * Fase 1: tipos + constantes. Sin acoplamiento a runtime React ni persistencia acta actual.
  */
 
+// AlignmentDocument integration (A3.5): refs + snapshots consumibles (Workspace no edita alineaciones).
+import type { AlignmentLifecycleState, AlignmentSnapshotV1 } from './alignment.document'
+
 export const ENCOUNTER_WORKSPACE_SCHEMA_VERSION = 1 as const
 export const ALIGNMENTS_SECTION_SCHEMA_VERSION = 1 as const
 
@@ -173,6 +176,21 @@ export interface TeamAlignmentDocumentV1 {
   readonly closedAt?: string
   readonly closedBy?: string
   readonly version: number
+  /**
+   * Ref documental a AlignmentDocumentV1 (source of truth) + snapshot cerrado consumible.
+   * Workspace NO posee alineaciones: solo agrega para hidratación/reconcile.
+   */
+  readonly alignmentRef?: WorkspaceAlignmentRefV1
+}
+
+export interface WorkspaceAlignmentRefV1 {
+  readonly storageKey: string
+  readonly documentVersion: number
+  readonly closeRevision: number
+  readonly lifecycle: AlignmentLifecycleState
+  readonly closedAt: string
+  readonly closedBy: string
+  readonly snapshot: AlignmentSnapshotV1
 }
 
 export interface WorkspaceAlignmentsSectionV1 {

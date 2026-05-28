@@ -7,7 +7,7 @@ import { createQaSimulatedError, __setQaRuntimeFlagsForTest, resetQaRuntimeSimul
 import { isServiceSuccess } from '../contracts/service-result.contract'
 import { saveMatchReportDraftSafe } from '../services/matchReport.service.wrapped'
 import { setMatchReportServiceMode } from '../services/matchReport.service'
-import { emptyMatchReport } from './fixtures'
+import { emptyMatchReport, loadReportResponse } from './fixtures'
 import { buildMatchPersistenceDto } from '../utils/persistenceDto'
 import { selectCanRetrySave } from '../selectors/matchReportOperationSelectors'
 
@@ -22,7 +22,7 @@ describe('QA recovery integration', () => {
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
       payload: {
-        response: { report: emptyMatchReport(), cerrada: false, fromActaSnapshot: false },
+        response: loadReportResponse(emptyMatchReport()),
       },
     })
     const playerId = state.report!.local.players[0]!.playerId

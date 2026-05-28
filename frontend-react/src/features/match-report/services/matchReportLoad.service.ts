@@ -18,8 +18,9 @@ import { EncounterWorkspaceLoadError } from '../infra/encounterWorkspaceLoad.err
 import { normalizeWorkspaceLoadError } from '../utils/bootstrapLoadErrors'
 import { executeWithRetry } from '../utils/retryOperation'
 import { matchReportRuntimeLog } from '../utils/runtimeLogger'
-import { syncActaPersistenceSessionFromWorkspaceLoad } from './actaPersistenceSession'
+import { loadDocumentRuntime } from './documentRuntimeLoad.service'
 import type { EncounterWorkspaceLoadResult } from '../contracts/encounterWorkspaceLoad.contract'
+import { commitDocumentRuntimeLoad } from '../domain/documentRuntimeStore'
 
 const LOAD_LOG = 'matchReportLoad'
 
@@ -34,10 +35,14 @@ function logLoad(event: string, detail?: Record<string, unknown>): void {
 export function workspaceLoadResultToLoadResponse(
   result: EncounterWorkspaceLoadResult,
 ): LoadMatchReportResponse {
+  const document = commitDocumentRuntimeLoad(result)
   return {
     report: result.report,
     cerrada: result.report.cerrada,
     fromActaSnapshot: result.report.fromActaSnapshot,
+    document,
+    workspaceVersion: document.metadata.workspaceVersion,
+    actaBinding: document.metadata.actaBinding,
   }
 }
 
@@ -48,8 +53,7 @@ async function loadViaEncounterWorkspace(
   request: LoadMatchReportRequest,
   loadPort: EncounterWorkspaceLoadPort,
 ): Promise<LoadMatchReportResponse> {
-  const loadResult = await loadPort.load({ context: request.context })
-  syncActaPersistenceSessionFromWorkspaceLoad(loadResult)
+  const { loadResult } = await loadDocumentRuntime(request.context, { workspaceLoadPort: loadPort })
   logLoad('workspaceLoad.ok', {
     source: loadResult.source,
     lifecycle: loadResult.lifecycle,

@@ -12,13 +12,13 @@ import {
 import { playerActionFieldKey } from '../types/matchReportForm.types'
 import { normalizeOperationError } from '../utils/errorNormalizer'
 import { resolveRecoveryPolicy } from '../utils/recoveryPolicy'
-import { emptyMatchReport } from './fixtures'
+import { emptyMatchReport, loadReportResponse } from './fixtures'
 
 function loadedState() {
   const report = emptyMatchReport()
   return matchReportReducer(matchReportInitialState, {
     type: 'LOAD_REPORT_SUCCESS',
-    payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+    payload: { response: loadReportResponse(report) },
   })
 }
 

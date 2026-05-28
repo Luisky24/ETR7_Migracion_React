@@ -11,16 +11,15 @@ import type {
   NormalizedOperationError,
   RecoveryHints,
 } from './matchReportOperation.types'
+import type { MatchReportDocumentRuntimeState } from './matchReportDocumentRuntime.types'
 
 export interface MatchReportState {
   readonly context: MatchContext | null
   readonly report: MatchReport | null
   readonly savedSnapshot: MatchReport | null
+  /** A4.2: proyección documental normalizada (Workspace + refs + reconcile). */
+  readonly document: MatchReportDocumentRuntimeState | null
   readonly dirty: boolean
-  /** @deprecated Derivar de `operation`; se mantiene por compatibilidad. */
-  readonly loading: boolean
-  /** @deprecated Derivar de `operation`; se mantiene por compatibilidad. */
-  readonly submitting: boolean
   readonly error: string | null
   readonly lastValidation: MatchValidationResult | null
   readonly lastClosure: MatchClosureResult | null

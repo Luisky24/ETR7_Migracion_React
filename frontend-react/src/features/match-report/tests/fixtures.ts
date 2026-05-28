@@ -1,10 +1,13 @@
 import type {
+  LoadMatchReportResponse,
   MatchContext,
   MatchReport,
   PlayerMatchActions,
   PlayerMatchLine,
   TeamSide,
 } from '../contracts'
+import type { MatchReportDocumentRuntimeState } from '../types/matchReportDocumentRuntime.types'
+import type { EncounterWorkspaceDocumentV1 } from '@/shared/contracts/encounter-workspace.document'
 import { deriveEditability } from '../domain'
 import { createPenaltyTryPlayerLine } from '../presentation/penaltyTryPlayer'
 import { buildPlayerId } from '../utils/playerRowKeys'
@@ -29,6 +32,150 @@ export function playerLine(
       PC: actions.PC ?? 0,
       Tar: actions.Tar ?? 0,
     },
+  }
+}
+
+export function minimalEncounterWorkspace(
+  matchId = 'A|LOCAL|VISITANTE',
+): EncounterWorkspaceDocumentV1 {
+  return {
+    identity: {
+      matchId,
+      category: 'M',
+      phase: 'Fase I',
+      encounter: {
+        grupo: 'A',
+        equipoLocal: 'LOCAL',
+        equipoVisitante: 'VISITANTE',
+        hora: '12:00',
+        campo: 'Campo 1',
+        encounterNumber: 1,
+      },
+      storageKey: `M::Fase I::${matchId}`,
+      documentFileName: 'ws.json',
+    },
+    metadata: {
+      schemaVersion: 1,
+      workspaceVersion: 1,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      createdBy: 'test',
+      lastMutationBy: 'test',
+      lastMutationKind: 'WORKSPACE_CREATE',
+    },
+    lifecycle: {
+      phase: 'workspace_created',
+      phaseChangedAt: '2026-01-01T00:00:00.000Z',
+      phaseChangedBy: 'test',
+    },
+    workflow: { actaBinding: 'ACTIVE' },
+    calendarRef: { rowKey: { grupo: 'A', equipoLocal: 'LOCAL', equipoVisitante: 'VISITANTE' } },
+    alignments: {
+      schemaVersion: 1,
+      gate: 'not_started',
+      local: {
+        side: 'local',
+        equipo: 'LOCAL',
+        estado: '',
+        delegado: '',
+        entrenador: '',
+        players: [],
+        version: 0,
+      },
+      visitante: {
+        side: 'visitante',
+        equipo: 'VISITANTE',
+        estado: '',
+        delegado: '',
+        entrenador: '',
+        players: [],
+        version: 0,
+      },
+    },
+    officials: {},
+    acta: null,
+    sync: { ledger: [] },
+    audit: { events: [] },
+  }
+}
+
+export function minimalDocumentRuntime(
+  matchId = 'A|LOCAL|VISITANTE',
+  overrides: Partial<MatchReportDocumentRuntimeState> = {},
+): MatchReportDocumentRuntimeState {
+  const base: MatchReportDocumentRuntimeState = {
+    matchId,
+    metadata: {
+      workspaceVersion: 1,
+      actaBinding: 'ACTIVE',
+      actaLifecycle: 'ACTA_EN_CURSO',
+      loadSource: 'workspace_shell',
+      workspacePhase: 'workspace_created',
+      alignmentGate: 'not_started',
+      actaDocumentVersion: null,
+    },
+    projections: {
+      local: {
+        side: 'local',
+        storageKey: null,
+        documentVersion: null,
+        closeRevision: null,
+        lifecycle: null,
+        snapshotPlayerCount: 0,
+        teamEstado: '',
+        teamVersion: 0,
+      },
+      visitante: {
+        side: 'visitante',
+        storageKey: null,
+        documentVersion: null,
+        closeRevision: null,
+        lifecycle: null,
+        snapshotPlayerCount: 0,
+        teamEstado: '',
+        teamVersion: 0,
+      },
+      acta: { fromActaSnapshot: false, cerrada: false },
+    },
+    stale: {
+      isStale: false,
+      kinds: [],
+      findings: [],
+      staleGraph: {
+        matchId,
+        workspaceVersion: 1,
+        actaBinding: 'ACTIVE',
+        gate: 'not_started',
+        local: { side: 'local', teamVersion: 0, teamEstado: '', ref: null, staleCandidates: [] },
+        visitante: {
+          side: 'visitante',
+          teamVersion: 0,
+          teamEstado: '',
+          ref: null,
+          staleCandidates: [],
+        },
+        staleCandidates: [],
+      },
+    },
+    superseded: { isSuperseded: false, actaBinding: 'ACTIVE' },
+    reconcile: { ok: true, findingCodes: [] },
+  }
+  return { ...base, ...overrides, metadata: { ...base.metadata, ...overrides.metadata } }
+}
+
+export function loadReportResponse(
+  report: MatchReport,
+  overrides: Partial<LoadMatchReportResponse> = {},
+): LoadMatchReportResponse {
+  const document = overrides.document ?? minimalDocumentRuntime(report.context.encuentroId)
+  return {
+    report,
+    cerrada: report.cerrada,
+    fromActaSnapshot: report.fromActaSnapshot,
+    document,
+    workspaceVersion: document.metadata.workspaceVersion,
+    actaBinding: document.metadata.actaBinding,
+    ...overrides,
   }
 }
 

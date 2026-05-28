@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { hasCapability } from '@/contracts/capabilities.contract'
 import { useSession } from '@/contexts/SessionContext'
@@ -7,8 +7,18 @@ import { ROUTES } from '@/router/routes'
 import { LineupsEmptyState } from '../components/LineupsEmptyState'
 import { LineupsErrorState } from '../components/LineupsErrorState'
 import { LineupsLoadingState } from '../components/LineupsLoadingState'
-import type { MatchLineupTeamDto, MatchLineupsQuery } from '../contracts/alineaciones.contract'
-import { useMatchLineups } from '../hooks/useMatchLineups'
+import type { MatchLineupsQuery } from '../contracts/alineaciones.contract'
+import { useCalendarMatchByRecordKey } from '@/features/calendar/hooks/useCalendarMatchByRecordKey'
+import { useEncounterWorkspace } from '@/features/match-report/hooks/useEncounterWorkspace'
+import type { MatchContext } from '@/features/match-report/contracts'
+import {
+  selectLineupIsSuperseded,
+  selectLineupStaleState,
+  selectLineupTeamViews,
+  type LineupTeamView,
+} from '@/features/match-report/selectors/lineupDocumentSelectors'
+import { MatchStaleDocumentBanner } from '@/features/match-report/components/MatchStaleDocumentBanner'
+import { MatchSupersededBanner } from '@/features/match-report/components/MatchSupersededBanner'
 
 function parseCategory(raw: string | null): CalendarCategory | null {
   if (raw === 'M' || raw === 'F') return raw
@@ -20,7 +30,7 @@ function parsePhase(raw: string | null): CalendarPhase | null {
   return null
 }
 
-function TeamBlock({ title, team }: { readonly title: string; readonly team: MatchLineupTeamDto }) {
+function TeamBlock({ title, team }: { readonly title: string; readonly team: LineupTeamView }) {
   const staff =
     team.entrenador || team.delegado ? (
       <ul className="mt-2 list-none space-y-1 text-xs text-slate-600">
@@ -37,10 +47,18 @@ function TeamBlock({ title, team }: { readonly title: string; readonly team: Mat
       </ul>
     ) : null
 
+  const refMeta = team.projection?.storageKey ? (
+    <p className="mt-1 text-xs text-slate-500">
+      Ref: v{team.projection.documentVersion ?? '—'} / rev {team.projection.closeRevision ?? '—'} (
+      {team.projection.lifecycle ?? '—'})
+    </p>
+  ) : null
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <h2 className="text-base font-semibold text-slate-900">{title}</h2>
       <p className="mt-1 text-sm text-slate-700">{team.teamName || '—'}</p>
+      {refMeta}
       {staff}
       <div className="mt-4 overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
@@ -88,7 +106,49 @@ export function MatchLineupsPage() {
     return { categoria, fase, recordKey }
   }, [searchParams])
 
-  const { data, loading, error, refetch } = useMatchLineups(query)
+  const { match, loading: matchLoading, error: matchError, refetch: refetchMatch } =
+    useCalendarMatchByRecordKey(
+      query ? { categoria: query.categoria, fase: query.fase, recordKey: query.recordKey } : null,
+    )
+
+  const encounterId = match?.encuentroId ?? null
+  const { document, loading: wsLoading, error: wsError, load: loadWorkspace, reload } =
+    useEncounterWorkspace(encounterId)
+
+  const loading = matchLoading || wsLoading
+  const error = matchError ?? wsError
+
+  React.useEffect(() => {
+    if (!query || !match) return
+    const context: MatchContext = {
+      category: query.categoria,
+      phase: query.fase,
+      encuentroId: match.encuentroId,
+      grupo: match.grupo,
+      equipoLocal: match.equipoLocal,
+      equipoVisitante: match.equipoVisitante,
+      hora: match.hora,
+      campo: match.campo,
+      resultadoDisplay: match.resultadoDisplay,
+      estadoAlineacionesDisplay: match.estadoAlineacionesDisplay,
+      matchStatus: match.estadoPartido,
+      referenciaEncuentro: match.referenciaEncuentro,
+    }
+    void loadWorkspace(context)
+  }, [query, match, loadWorkspace])
+
+  const teamViews = useMemo(
+    () => (encounterId ? selectLineupTeamViews(encounterId) : null),
+    [encounterId, document],
+  )
+  const isSuperseded = useMemo(
+    () => (encounterId ? selectLineupIsSuperseded(encounterId) : false),
+    [encounterId, document],
+  )
+  const staleState = useMemo(
+    () => (encounterId ? selectLineupStaleState(encounterId) : null),
+    [encounterId, document],
+  )
 
   if (state.status !== 'authenticated') {
     return null
@@ -100,7 +160,7 @@ export function MatchLineupsPage() {
 
   const backHref = ROUTES.calendar
   const showNoParams = query === null
-  const showBoundaryInvalid = !loading && !error && data === null && query !== null
+  const showBoundaryInvalid = !loading && !error && !document && query !== null
 
   return (
     <article className="page-card max-w-6xl">
@@ -108,7 +168,7 @@ export function MatchLineupsPage() {
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Alineaciones</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Solo lectura. Los datos provienen de las hojas de equipo o acta (misma fuente que legacy).
+            Solo lectura. Proyección documental unificada (Encounter Workspace + snapshots CLOSED).
           </p>
         </div>
         <Link
@@ -126,16 +186,66 @@ export function MatchLineupsPage() {
 
         {query && loading ? <LineupsLoadingState /> : null}
         {query && !loading && error ? (
-          <LineupsErrorState message={error.message} onRetry={() => void refetch()} />
+          <LineupsErrorState message={error.message} onRetry={() => void refetchMatch()} />
         ) : null}
         {query && !loading && !error && showBoundaryInvalid ? (
           <LineupsEmptyState message="Respuesta del servidor no reconocida. Reintente o revise el despliegue del boundary." />
         ) : null}
 
-        {data ? (
+        <MatchStaleDocumentBanner
+          stale={staleState}
+          onReload={
+            match && query
+              ? () => {
+                  const context: MatchContext = {
+                    category: query.categoria,
+                    phase: query.fase,
+                    encuentroId: match.encuentroId,
+                    grupo: match.grupo,
+                    equipoLocal: match.equipoLocal,
+                    equipoVisitante: match.equipoVisitante,
+                    hora: match.hora,
+                    campo: match.campo,
+                    resultadoDisplay: match.resultadoDisplay,
+                    estadoAlineacionesDisplay: match.estadoAlineacionesDisplay,
+                    matchStatus: match.estadoPartido,
+                    referenciaEncuentro: match.referenciaEncuentro,
+                  }
+                  void reload(context)
+                }
+              : undefined
+          }
+        />
+
+        <MatchSupersededBanner
+          open={isSuperseded}
+          onReload={
+            match && query
+              ? () => {
+                  const context: MatchContext = {
+                    category: query.categoria,
+                    phase: query.fase,
+                    encuentroId: match.encuentroId,
+                    grupo: match.grupo,
+                    equipoLocal: match.equipoLocal,
+                    equipoVisitante: match.equipoVisitante,
+                    hora: match.hora,
+                    campo: match.campo,
+                    resultadoDisplay: match.resultadoDisplay,
+                    estadoAlineacionesDisplay: match.estadoAlineacionesDisplay,
+                    matchStatus: match.estadoPartido,
+                    referenciaEncuentro: match.referenciaEncuentro,
+                  }
+                  void reload(context)
+                }
+              : undefined
+          }
+        />
+
+        {teamViews ? (
           <div className="grid gap-6 lg:grid-cols-2">
-            <TeamBlock title="Local" team={data.local} />
-            <TeamBlock title="Visitante" team={data.visitante} />
+            <TeamBlock title="Local" team={teamViews.local} />
+            <TeamBlock title="Visitante" team={teamViews.visitante} />
           </div>
         ) : null}
       </div>

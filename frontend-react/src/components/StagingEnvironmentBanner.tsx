@@ -18,8 +18,10 @@ export function StagingEnvironmentBanner() {
       aria-live="polite"
       data-testid="staging-environment-banner"
     >
-      <span className="block">ETR7 STAGING — JSON/{mode}</span>
-      <span className="block text-xs font-normal">Datos reales federativos · NO PRODUCCIÓN</span>
+      <span className="block">ETR7 STAGING GAS — JSON/{mode}</span>
+      <span className="block text-xs font-normal">
+        Transporte GAS + Drive + Encounter Workspace REAL · NO PRODUCCIÓN
+      </span>
     </div>
   )
 }

@@ -1,7 +1,11 @@
 import { createCapabilities } from '@/contracts/capabilities.contract'
 import type { GasAuthLoginV2Failure, GasAuthLoginV2Success } from '@/contracts/auth.contract'
 
-const LOCAL_DEV_CREDENTIAL_HINT = 'local-dev'
+export const LOCAL_DEV_CREDENTIAL_HINT = 'local-dev'
+
+export function isLocalDevCredential(credential: string): boolean {
+  return credential.trim() === LOCAL_DEV_CREDENTIAL_HINT
+}
 
 /**
  * Respuesta wire de `auth_login_v2` para QA local (sin GAS).
@@ -39,4 +43,3 @@ export function mockAuthLoginV2Response(credential: unknown): GasAuthLoginV2Succ
   return success
 }
 
-export { LOCAL_DEV_CREDENTIAL_HINT }

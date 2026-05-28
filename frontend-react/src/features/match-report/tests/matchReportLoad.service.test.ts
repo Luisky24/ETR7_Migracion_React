@@ -8,7 +8,7 @@ import {
   loadMatchReportForRuntimeSafe,
 } from '../services/matchReportLoad.service'
 import { normalizeWorkspaceLoadError } from '../utils/bootstrapLoadErrors'
-import { baseContext, emptyMatchReport } from './fixtures'
+import { baseContext, emptyMatchReport, loadReportResponse, minimalEncounterWorkspace } from './fixtures'
 import { matchReportReducer } from '../reducers/matchReportReducer'
 import { matchReportInitialState } from '../reducers/matchReportInitialState'
 import { buildOperationFailurePayload } from '../utils/operationDispatch'
@@ -20,13 +20,15 @@ import {
   projectMatchReportToActaDocument,
 } from '../adapters/actaProjection.adapter'
 import type { EncounterWorkspaceLoadResult } from '../contracts/encounterWorkspaceLoad.contract'
+import { clearDocumentRuntimeStore } from '../domain/documentRuntimeStore'
 
 describe('persistenceFlags', () => {
   it('parseActaPersistenceMode', () => {
     expect(parseActaPersistenceMode('legacy')).toBe('legacy')
     expect(parseActaPersistenceMode('json')).toBe('json')
     expect(parseActaPersistenceMode('hybrid')).toBe('hybrid')
-    expect(parseActaPersistenceMode(undefined)).toBe('legacy')
+    // A4: runtime documental completo — default = json (sin fallback legacy).
+    expect(parseActaPersistenceMode(undefined)).toBe('json')
     expect(usesJsonPersistence('json')).toBe(true)
     expect(usesJsonPersistence('hybrid')).toBe(true)
     expect(usesJsonPersistence('legacy')).toBe(false)
@@ -35,6 +37,7 @@ describe('persistenceFlags', () => {
 
 describe('loadMatchReportForRuntimeSafe', () => {
   beforeEach(() => {
+    clearDocumentRuntimeStore()
     vi.restoreAllMocks()
   })
 
@@ -49,14 +52,7 @@ describe('loadMatchReportForRuntimeSafe', () => {
         source: 'workspace_shell' as const,
         lifecycle: 'NO_EXISTE' as const,
         report: emptyMatchReport(context),
-        workspace: {
-          identity: {
-            matchId: context.encuentroId,
-            documentFileName: 'ENC_WS_Fase1_Encuentro1',
-            encounter: { encounterNumber: 1 },
-          },
-          metadata: { workspaceVersion: 1 },
-        } as EncounterWorkspaceLoadResult['workspace'],
+        workspace: minimalEncounterWorkspace(context.encuentroId),
         workspaceVersion: 1,
       })),
     }
@@ -74,12 +70,13 @@ describe('loadMatchReportForRuntimeSafe', () => {
       source: 'workspace_acta',
       lifecycle: 'ACTA_EN_CURSO',
       report: { ...report, fromActaSnapshot: true, cerrada: false },
-      workspace: {} as EncounterWorkspaceLoadResult['workspace'],
+      workspace: minimalEncounterWorkspace(context.encuentroId),
       workspaceVersion: 2,
     }
     const response = workspaceLoadResultToLoadResponse(loadResult)
     expect(response.fromActaSnapshot).toBe(true)
     expect(response.cerrada).toBe(false)
+    expect(response.document.metadata.loadSource).toBe('workspace_acta')
   })
 
   it('3. workspace_alignments — editable sin snapshot acta', async () => {
@@ -89,7 +86,7 @@ describe('loadMatchReportForRuntimeSafe', () => {
       source: 'workspace_alignments',
       lifecycle: 'NO_EXISTE',
       report: legacy,
-      workspace: {} as EncounterWorkspaceLoadResult['workspace'],
+      workspace: minimalEncounterWorkspace(context.encuentroId),
       workspaceVersion: 1,
     }
     const response = workspaceLoadResultToLoadResponse(loadResult)
@@ -119,14 +116,7 @@ describe('loadMatchReportForRuntimeSafe', () => {
           source: 'workspace_shell' as const,
           lifecycle: 'NO_EXISTE' as const,
           report: emptyMatchReport(context),
-          workspace: {
-            identity: {
-              matchId: context.encuentroId,
-              documentFileName: 'ENC_WS_Fase1_Encuentro1',
-              encounter: { encounterNumber: 1 },
-            },
-            metadata: { workspaceVersion: 1 },
-          } as EncounterWorkspaceLoadResult['workspace'],
+          workspace: minimalEncounterWorkspace(context.encuentroId),
           workspaceVersion: 1,
         }
       }),
@@ -148,7 +138,9 @@ describe('loadMatchReportForRuntimeSafe', () => {
     }
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: true, fromActaSnapshot: true } },
+      payload: {
+        response: loadReportResponse(report, { cerrada: true, fromActaSnapshot: true }),
+      },
     })
     state = matchReportReducer(state, { type: 'LOCK_REPORT' })
     expect(state.report?.cerrada).toBe(true)
@@ -200,7 +192,7 @@ describe('loadMatchReportForRuntimeSafe', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = { ...state, dirty: true }
     const payload = buildOperationFailurePayload(

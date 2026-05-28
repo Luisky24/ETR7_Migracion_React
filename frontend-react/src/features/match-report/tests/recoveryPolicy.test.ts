@@ -4,7 +4,7 @@ import { matchReportInitialState } from '../reducers/matchReportInitialState'
 import { selectCanRetryFinalize } from '../selectors/matchReportOperationSelectors'
 import { normalizeOperationError } from '../utils/errorNormalizer'
 import { resolveRecoveryPolicy } from '../utils/recoveryPolicy'
-import { emptyMatchReport } from './fixtures'
+import { emptyMatchReport, loadReportResponse } from './fixtures'
 
 describe('resolveRecoveryPolicy — finalize retry (R1)', () => {
   const retryableCloseError = normalizeOperationError(
@@ -71,7 +71,7 @@ describe('FINALIZE_REPORT_FAILURE + selectCanRetryFinalize', () => {
 
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = { ...state, dirty: true, operation: 'loaded' }
     state = matchReportReducer(state, {

@@ -3,7 +3,7 @@ import { matchReportReducer } from '../reducers/matchReportReducer'
 import { matchReportInitialState } from '../reducers/matchReportInitialState'
 import { normalizeOperationError } from '../utils/errorNormalizer'
 import { resolveRecoveryPolicy } from '../utils/recoveryPolicy'
-import { emptyMatchReport } from './fixtures'
+import { emptyMatchReport, loadReportResponse } from './fixtures'
 
 function failurePayload(message: string) {
   const operationError = normalizeOperationError(message)
@@ -16,7 +16,7 @@ describe('dirty state recovery', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = { ...state, dirty: true, operation: 'loaded' }
     state = matchReportReducer(state, {
@@ -33,7 +33,7 @@ describe('dirty state recovery', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = matchReportReducer(state, {
       type: 'FINALIZE_REPORT_FAILURE',
@@ -53,7 +53,7 @@ describe('dirty state recovery', () => {
 
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = { ...state, dirty: true }
     state = matchReportReducer(state, {
@@ -71,7 +71,7 @@ describe('dirty state recovery', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     const snapshot = state.savedSnapshot!
     state = matchReportReducer(state, { type: 'RESET_REPORT' })

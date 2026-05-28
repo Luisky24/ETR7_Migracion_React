@@ -1,4 +1,5 @@
 import type { MatchClosureErrorCode } from './errors.contract'
+import type { MatchReportDocumentRuntimeState } from '../types/matchReportDocumentRuntime.types'
 
 export type MatchCategory = 'M' | 'F'
 export type MatchPhaseLabel = 'Fase I' | 'Fase II'
@@ -163,4 +164,10 @@ export interface LoadMatchReportResponse {
   readonly report: MatchReport
   readonly cerrada: boolean
   readonly fromActaSnapshot: boolean
+  /** A4.2: estado documental runtime normalizado (única fuente metadata/refs/reconcile). */
+  readonly document: MatchReportDocumentRuntimeState
+  /** @deprecated Usar `document.metadata.workspaceVersion`. */
+  readonly workspaceVersion?: number
+  /** @deprecated Usar `document.metadata.actaBinding`. */
+  readonly actaBinding?: 'ACTIVE' | 'SUPERSEDED'
 }

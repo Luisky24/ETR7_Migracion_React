@@ -14,13 +14,13 @@ import {
 import { matchReportReducer } from '../reducers/matchReportReducer'
 import { matchReportInitialState } from '../reducers/matchReportInitialState'
 import { recalculateMatchReport } from '../domain/scoring'
-import { emptyMatchReport, playerLine } from './fixtures'
+import { emptyMatchReport, loadReportResponse, playerLine } from './fixtures'
 
 function loadedState() {
   const report = emptyMatchReport()
   return matchReportReducer(matchReportInitialState, {
     type: 'LOAD_REPORT_SUCCESS',
-    payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+    payload: { response: loadReportResponse(report) },
   })
 }
 
@@ -54,7 +54,7 @@ describe('validation UX (QA-A5)', () => {
     })
     const state = matchReportReducer(loadedState(), {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     expect(selectCloseBlockingErrors(state).some((e) => e.code === 'CONVERSIONS_EXCEED_TRIES')).toBe(
       true,

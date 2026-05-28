@@ -35,6 +35,14 @@ import {
   selectOperation,
   selectOperationLabel,
 } from '../selectors/matchReportOperationSelectors'
+import {
+  selectEffectiveReadOnly,
+  selectIsSuperseded,
+  selectRuntimeStaleState,
+  selectShowRecoveryBanner,
+} from '../selectors/matchReportDocumentSelectors'
+import { MatchStaleDocumentBanner } from './MatchStaleDocumentBanner'
+import { useUxOperationalTelemetry } from '../hooks/useUxOperationalTelemetry'
 import { needsEmptyCloseConfirmation } from '../domain'
 import { MatchActionsTable } from './MatchActionsTable'
 import { MatchCloseBlockedModal } from './MatchCloseBlockedModal'
@@ -48,6 +56,7 @@ import { MatchReportMetaPanel } from './MatchReportMetaPanel'
 import { MatchScoreCard } from './MatchScoreCard'
 import { MatchTeamCard } from './MatchTeamCard'
 import { MatchTeamObservationsField } from './MatchTeamObservationsField'
+import { MatchSupersededBanner } from './MatchSupersededBanner'
 
 export function MatchReportView() {
   const { state, saveDraft, finalizeReport, recalculate, reset, reload, dismissError } =
@@ -65,7 +74,13 @@ export function MatchReportView() {
   const operation = useMemo(() => selectOperation(state), [state.operation, state.operationError])
   const operationLabel = useMemo(() => selectOperationLabel(state), [state.operation])
   const bannerVariant = useMemo(() => selectOperationBannerVariant(state), [state])
-  const showOperationBanner = useMemo(() => selectShowOperationBanner(state), [state])
+  const runtimeStale = useMemo(() => selectRuntimeStaleState(state), [state])
+  const showStaleBanner = runtimeStale?.isStale === true
+  const showRecoveryBanner = useMemo(() => selectShowRecoveryBanner(state), [state])
+  const showOperationBanner = useMemo(
+    () => selectShowOperationBanner(state) || showStaleBanner || showRecoveryBanner,
+    [state, showStaleBanner, showRecoveryBanner],
+  )
   const operationError = state.operationError
   const recovery = state.recovery
   const canRetrySave = useMemo(() => selectCanRetrySave(state), [state.operation, state.recovery])
@@ -75,8 +90,11 @@ export function MatchReportView() {
   const canAttemptSave = useMemo(() => selectCanAttemptSave(state), [state])
   const canAttemptFinalize = useMemo(() => selectCanAttemptFinalize(state), [state])
   const busy = useMemo(() => selectIsOperationBusy(state), [state.operation])
-  const readOnly = useMemo(() => selectIsReadOnly(state), [state])
-
+  const baseReadOnly = useMemo(() => selectIsReadOnly(state), [state])
+  const readOnly = useMemo(() => selectEffectiveReadOnly(state, baseReadOnly), [state, baseReadOnly])
+  const isSuperseded = useMemo(() => selectIsSuperseded(state), [state.document, state])
+  const isConcurrentConflict = state.operationError?.code === 'DOCUMENT_VERSION_CONFLICT'
+  useUxOperationalTelemetry(state)
   const [helpOpen, setHelpOpen] = useState(false)
   const [finalizeConfirmOpen, setFinalizeConfirmOpen] = useState(false)
   const [closeBlockedOpen, setCloseBlockedOpen] = useState(false)
@@ -229,6 +247,14 @@ export function MatchReportView() {
           onDismissError={dismissError}
         />
       ) : null}
+
+      <MatchStaleDocumentBanner
+        stale={runtimeStale}
+        concurrent={isConcurrentConflict}
+        onReload={canReload ? onReload : undefined}
+      />
+
+      <MatchSupersededBanner open={isSuperseded} onReload={onReload} />
 
       <MatchScoreCard
         score={score}

@@ -8,7 +8,12 @@ import type {
   AuthRole,
   GasAuthLoginV2Success,
 } from '@/contracts/auth.contract'
+import { isLocalSpaDevMode } from '@/app/localDevMode'
 import { gasTransport } from '@/transport/gasTransport'
+import {
+  isLocalDevCredential,
+  LOCAL_DEV_CREDENTIAL_HINT,
+} from '@/transport/localDev/mockAuthLogin'
 
 const GAS_AUTH_LOGIN_V2 = 'auth_login_v2'
 
@@ -166,6 +171,14 @@ export async function authLogin(request: AuthLoginRequest): Promise<AuthLoginRes
   const clave = request.credential.trim()
   if (!clave) {
     return err({ code: 'AUTH_EMPTY', message: 'Indica una credencial.' })
+  }
+
+  if (!isLocalSpaDevMode() && isLocalDevCredential(clave)) {
+    log.warn('auth.login.localDevCredentialRejected', { hint: LOCAL_DEV_CREDENTIAL_HINT })
+    return err({
+      code: 'AUTH_INVALID',
+      message: 'La credencial de desarrollo local no es válida en staging GAS.',
+    })
   }
 
   try {

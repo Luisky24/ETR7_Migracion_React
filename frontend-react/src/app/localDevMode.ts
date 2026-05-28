@@ -1,9 +1,11 @@
 /**
  * Modo desarrollo SPA (Vite / Vitest): sin depender de `google.script.run`.
- * Producción Apps Script: `import.meta.env.MODE === 'gas'`.
+ * Staging/producción GAS: `vite build --mode gas` servido desde Web App.
  */
+import { isLocalDevRuntime } from './runtimeProfile'
+
 export function isLocalSpaDevMode(): boolean {
-  return import.meta.env.MODE !== 'gas'
+  return isLocalDevRuntime()
 }
 
 export function isGasScriptHostAvailable(): boolean {

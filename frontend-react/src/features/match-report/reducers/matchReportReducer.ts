@@ -23,7 +23,6 @@ import {
 } from '../domain/operationState'
 import type { MatchReportState } from '../types/matchReportState.types'
 import type { MatchReportOperationStatus } from '../types/matchReportOperation.types'
-import { syncLegacyFlags } from '../utils/operationSync'
 import { reportsEqual } from '../utils/shallowCompare'
 import type { MatchReportAction } from './matchReportActions'
 import { matchReportInitialState } from './matchReportInitialState'
@@ -46,12 +45,9 @@ function applyOperation(
   operation: MatchReportOperationStatus,
   extra: Partial<MatchReportState> = {},
 ): MatchReportState {
-  const flags = syncLegacyFlags(operation)
   return {
     ...state,
     operation,
-    loading: flags.loading,
-    submitting: flags.submitting,
     ...extra,
   }
 }
@@ -89,6 +85,7 @@ export function matchReportReducer(
           ...state,
           report: locked,
           savedSnapshot: locked,
+          document: action.payload.response.document,
           dirty: false,
           error: null,
           operationError: null,
@@ -210,7 +207,6 @@ export function matchReportReducer(
       return applyOperation(
         {
           ...state,
-          submitting: false,
           lastClosure: action.payload.result,
           error: msg,
           operationError,

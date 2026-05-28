@@ -9,7 +9,8 @@
 
 export type ActaPersistenceMode = 'legacy' | 'json' | 'hybrid'
 
-const DEFAULT_MODE: ActaPersistenceMode = 'legacy'
+// A4: runtime documental completo — no permitir persistencia legacy en runtime React.
+const DEFAULT_MODE: ActaPersistenceMode = 'json'
 
 export function parseActaPersistenceMode(raw: string | undefined): ActaPersistenceMode {
   const v = String(raw ?? '').trim().toLowerCase()

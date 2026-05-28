@@ -1,5 +1,7 @@
 import { isOperationBusy, canStartFinalize, canStartLoad, canStartSave } from '../domain/operationState'
 import type { MatchReportState } from '../types/matchReportState.types'
+import { buildLoadingUxLabel } from '../ux/uxOperationalMessages'
+import { selectIsDocumentallyBlocked } from './matchReportDocumentSelectors'
 
 export function selectOperation(state: MatchReportState) {
   return state.operation
@@ -30,18 +32,25 @@ export function selectCanReloadReport(state: MatchReportState): boolean {
 }
 
 export function selectOperationLabel(state: MatchReportState): string {
+  if (selectIsDocumentallyBlocked(state) && state.operation === 'loaded') {
+    return 'Solo lectura (estado documental)'
+  }
   const labels: Record<MatchReportState['operation'], string> = {
     idle: 'En espera',
-    loading: 'Cargando…',
-    loaded: 'Listo',
-    saving: 'Guardando…',
-    saved: 'Guardado',
-    finalizing: 'Cerrando acta…',
+    loading: buildLoadingUxLabel('loading'),
+    loaded: 'Listo para editar',
+    saving: buildLoadingUxLabel('saving'),
+    saved: 'Borrador guardado',
+    finalizing: buildLoadingUxLabel('finalizing'),
     finalized: 'Acta cerrada',
-    locked: 'Bloqueado (solo lectura)',
-    error: 'Error',
+    locked: 'Acta cerrada (solo lectura)',
+    error: 'Revisar error',
   }
   return labels[state.operation]
+}
+
+export function selectCanSaveDraftOperational(state: MatchReportState): boolean {
+  return selectCanRetrySave(state) || (canStartSave(state.operation) && !selectIsDocumentallyBlocked(state))
 }
 
 export function selectCanStartLoadOperation(state: MatchReportState): boolean {

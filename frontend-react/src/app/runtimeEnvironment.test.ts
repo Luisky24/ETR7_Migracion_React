@@ -25,11 +25,14 @@ describe('runtimeEnvironment', () => {
   it('2. startup snapshot exposes MODE and persistence', () => {
     vi.stubEnv('MODE', 'gas')
     vi.stubEnv('VITE_ETR7_ACTA_PERSISTENCE', 'hybrid')
+    vi.stubEnv('VITE_ETR7_STAGING', 'true')
     setMatchReportServiceMode('gas')
     const s = getRuntimeEnvironmentSnapshot()
     expect(s.viteMode).toBe('gas')
+    expect(s.profile).toBe('staging-gas')
     expect(s.persistence).toBe('hybrid')
     expect(s.matchReportService).toBe('gas')
+    expect(s.documentStore).toBe('gasDrive')
   })
 
   it('3. staging banner visible on gas + hybrid + staging flag', () => {
@@ -62,9 +65,12 @@ describe('runtimeEnvironment', () => {
   it('7. MODE=gas snapshot uses real transport labels', () => {
     vi.stubEnv('MODE', 'gas')
     vi.stubEnv('VITE_ETR7_ACTA_PERSISTENCE', 'hybrid')
+    vi.stubEnv('VITE_ETR7_STAGING', 'true')
     setMatchReportServiceMode('gas')
     const s = getRuntimeEnvironmentSnapshot()
+    expect(s.profile).toBe('staging-gas')
     expect(s.gasTransport).toBe('real')
+    expect(s.documentStore).toBe('gasDrive')
     expect(s.calendarSync).toBe('real')
     expect(s.actaRepository).toBe('Drive/GAS')
   })

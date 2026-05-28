@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { isLocalSpaDevMode } from '@/app/localDevMode'
+import { isStagingGasRuntime } from '@/app/runtimeProfile'
 import { useSession } from '@/contexts/SessionContext'
 import { LOCAL_DEV_CREDENTIAL_HINT } from '@/transport/localDev/mockAuthLogin'
 
 export function LoginPage() {
   const { login, isAuthLoading, authError } = useSession()
   const localDev = isLocalSpaDevMode()
+  const stagingGas = isStagingGasRuntime()
   const [credential, setCredential] = useState(localDev ? LOCAL_DEV_CREDENTIAL_HINT : '')
 
   return (
@@ -20,6 +22,17 @@ export function LoginPage() {
         <p className="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900" role="status">
           Modo desarrollo local: el transporte GAS está simulado. Usa cualquier credencial no vacía (p. ej.{' '}
           <code className="font-mono text-xs">{LOCAL_DEV_CREDENTIAL_HINT}</code>) y pulsa Entrar.
+        </p>
+      ) : null}
+
+      {stagingGas ? (
+        <p
+          className="mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-950"
+          role="status"
+          data-testid="staging-gas-login-notice"
+        >
+          Staging GAS real: transporte, Drive y Encounter Workspace operan vía Apps Script. Usa tu credencial
+          federativa (no <code className="font-mono text-xs">{LOCAL_DEV_CREDENTIAL_HINT}</code>).
         </p>
       ) : null}
 

@@ -11,22 +11,27 @@ import {
   useStableMatchContextFromSearch,
 } from '../hooks/useStableMatchContextFromSearch'
 import { MatchReportView } from '../components/MatchReportView'
+import { prepareDocumentRuntimeForEncounter } from '../domain/documentRuntimeNavigation'
 
 function MatchReportPageInner() {
   const [searchParams] = useSearchParams()
   const context = useStableMatchContextFromSearch(searchParams)
   const { load } = useMatchReport()
   const hydratedLoadKeyRef = useRef<string | null>(null)
+  const previousEncounterIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!context || !canOpenMatchReport(context)) {
       hydratedLoadKeyRef.current = null
+      previousEncounterIdRef.current = null
       return
     }
     const loadKey = matchContextLoadKey(context)
     if (hydratedLoadKeyRef.current === loadKey) {
       return
     }
+    prepareDocumentRuntimeForEncounter(context.encuentroId, previousEncounterIdRef.current)
+    previousEncounterIdRef.current = context.encuentroId
     hydratedLoadKeyRef.current = loadKey
     void load(context)
   }, [context, load])

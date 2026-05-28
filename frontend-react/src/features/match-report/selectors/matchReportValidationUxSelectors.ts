@@ -8,6 +8,7 @@ import {
 import type { CopaCloseContext } from '../domain/copa'
 import type { MatchReportState } from '../types/matchReportState.types'
 import { selectIsDirty, selectIsEditable, selectMatchReport } from './matchReportSelectors'
+import { selectIsDocumentallyBlocked } from './matchReportDocumentSelectors'
 import { isOperationBusy } from '../domain/operationState'
 import { selectValidationDisplay } from './matchReportUiSelectors'
 
@@ -160,6 +161,7 @@ export function selectDraftBlockingErrors(state: MatchReportState): readonly Mat
 }
 
 export function selectCanAttemptSave(state: MatchReportState): boolean {
+  if (selectIsDocumentallyBlocked(state)) return false
   if (!selectIsEditable(state) || !selectIsDirty(state) || isOperationBusy(state.operation)) {
     return false
   }
@@ -167,6 +169,7 @@ export function selectCanAttemptSave(state: MatchReportState): boolean {
 }
 
 export function selectCanAttemptFinalize(state: MatchReportState): boolean {
+  if (selectIsDocumentallyBlocked(state)) return false
   if (!selectIsEditable(state) || isOperationBusy(state.operation)) return false
   return !!state.report
 }

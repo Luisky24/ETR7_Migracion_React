@@ -4,7 +4,7 @@ import { matchReportInitialState } from '../reducers/matchReportInitialState'
 import { recalculateMatchReport } from '../domain/scoring'
 import { normalizeOperationError } from '../utils/errorNormalizer'
 import { resolveRecoveryPolicy } from '../utils/recoveryPolicy'
-import { baseContext, emptyMatchReport, playerLine } from './fixtures'
+import { baseContext, emptyMatchReport, loadReportResponse, playerLine } from './fixtures'
 
 function opFailure(message: string) {
   const operationError = normalizeOperationError(message)
@@ -17,11 +17,11 @@ describe('matchReportReducer', () => {
     const report = emptyMatchReport()
     const state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     expect(state.report).not.toBeNull()
     expect(state.dirty).toBe(false)
-    expect(state.loading).toBe(false)
+    expect(state.document).not.toBeNull()
     expect(state.operation).toBe('loaded')
   })
 
@@ -29,7 +29,7 @@ describe('matchReportReducer', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     const playerId = state.report!.local.players[0]!.playerId
     state = matchReportReducer(state, {
@@ -45,7 +45,7 @@ describe('matchReportReducer', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = matchReportReducer(state, { type: 'LOCK_REPORT' })
     expect(state.report!.editability).toBe('read_only')
@@ -57,7 +57,7 @@ describe('matchReportReducer', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = matchReportReducer(state, {
       type: 'FINALIZE_REPORT_FAILURE',
@@ -79,7 +79,7 @@ describe('matchReportReducer', () => {
     })
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     const saved = state.report!
     state = matchReportReducer(state, {
@@ -105,7 +105,7 @@ describe('matchReportReducer', () => {
     })
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = { ...state, dirty: true }
     state = matchReportReducer(state, {
@@ -113,26 +113,25 @@ describe('matchReportReducer', () => {
       payload: { report },
     })
     expect(state.dirty).toBe(false)
-    expect(state.submitting).toBe(false)
+    expect(state.operation).not.toBe('finalizing')
   })
 
   it('CALCULATE_CLASSIFICATION delega a dominio', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = matchReportReducer(state, { type: 'CALCULATE_CLASSIFICATION' })
     expect(state.report!.score).toEqual({ local: 0, visitante: 0 })
   })
 
-  it('LOAD_REPORT establece context y loading', () => {
+  it('LOAD_REPORT establece context y operation loading', () => {
     const context = baseContext()
     const state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT',
       payload: { request: { context } },
     })
-    expect(state.loading).toBe(true)
     expect(state.operation).toBe('loading')
     expect(state.context?.encuentroId).toBe(context.encuentroId)
   })
@@ -150,7 +149,7 @@ describe('matchReportReducer', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = matchReportReducer(state, {
       type: 'UPDATE_REFEREE',
@@ -171,7 +170,7 @@ describe('matchReportReducer', () => {
     const report = emptyMatchReport()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = matchReportReducer(state, { type: 'SAVE_DRAFT_SUCCESS', payload: { report } })
     expect(state.operation).toBe('saved')

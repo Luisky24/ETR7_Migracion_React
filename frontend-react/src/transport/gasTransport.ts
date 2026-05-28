@@ -2,8 +2,8 @@
  * Único punto de contacto con `google.script.run`.
  * Sin lógica de negocio; solo invocación, promesas, timeout y errores de transporte.
  *
- * - `MODE === 'gas'` (build:gas / Web App): siempre `google.script.run` real.
- * - `MODE !== 'gas'` (npm run dev): despacha a `mockGasHandlers` — no válido para staging federativo.
+ * - Perfil `staging-gas` / `production` (`vite build --mode gas` + Web App): `google.script.run` real.
+ * - Perfil `localDev` (`npm run dev`): `mockGasHandlers` + fakeDrive — no válido para validación federativa.
  */
 
 import { isLocalSpaDevMode } from '@/app/localDevMode'

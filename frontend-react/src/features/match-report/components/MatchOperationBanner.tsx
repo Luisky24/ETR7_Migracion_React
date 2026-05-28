@@ -1,5 +1,6 @@
 import type { NormalizedOperationError, RecoveryHints } from '../types/matchReportOperation.types'
 import type { OperationBannerVariant } from '../selectors/matchReportUiSelectors'
+import { buildRecoveryUxCopy } from '../ux/uxOperationalMessages'
 import { MatchStatusBadge } from './MatchStatusBadge'
 import type { MatchReportOperationStatus } from '../types/matchReportOperation.types'
 
@@ -48,15 +49,24 @@ export function MatchOperationBanner({
     <section className={`rounded-lg border p-4 ${BANNER_CLASS[variant]}`} role="status" aria-live="polite">
       <div>
         <MatchStatusBadge operation={operation} label={operationLabel} variant={variant} />
-        {busy ? <p className="mt-2 text-sm text-slate-700">Procesando operación…</p> : null}
+        {busy ? (
+          <p className="mt-2 text-sm text-slate-700" data-testid="match-operation-busy">
+            Procesando operación en Drive…
+          </p>
+        ) : null}
       </div>
 
       {operationError ? (
-        <div className="mt-3">
+        <div className="mt-3" data-testid="match-operation-error">
           <p className="text-sm font-medium text-red-900">{operationError.userMessage}</p>
           <p className="mt-0.5 text-xs text-red-800/80">
             {operationError.code} — {operationError.technicalMessage}
           </p>
+          {operationError.code === 'DOCUMENT_VERSION_CONFLICT' ? (
+            <p className="mt-2 text-xs font-medium text-amber-900">
+              Otro operador guardó cambios. Use «Recargar» para sincronizar con Drive sin sobrescribir.
+            </p>
+          ) : null}
         </div>
       ) : null}
 

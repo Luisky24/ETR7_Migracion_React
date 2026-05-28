@@ -4,6 +4,15 @@
  */
 
 import { isLocalSpaDevMode, isGasScriptHostAvailable } from '@/app/localDevMode'
+import {
+  getDocumentStoreKind,
+  getGasTransportKind,
+  getRuntimeProfile,
+  isStagingGasRuntime,
+  logRuntimeProfileStartup,
+  type DocumentStoreKind,
+  type RuntimeProfile,
+} from '@/app/runtimeProfile'
 import { log } from '@/core/debug'
 import {
   getActaPersistenceMode,
@@ -21,6 +30,7 @@ export type RuntimeEnvironmentIssueCode =
   | 'MATCH_REPORT_MOCK_MODE'
   | 'LEGACY_PERSISTENCE_ON_GAS_BUILD'
   | 'QA_FLAGS_ACTIVE'
+  | 'STAGING_OPENED_OUTSIDE_GAS_HOST'
 
 export interface RuntimeEnvironmentIssue {
   readonly code: RuntimeEnvironmentIssueCode
@@ -29,10 +39,12 @@ export interface RuntimeEnvironmentIssue {
 }
 
 export interface RuntimeEnvironmentSnapshot {
+  readonly profile: RuntimeProfile
   readonly viteMode: string
   readonly persistence: ActaPersistenceMode
   readonly matchReportService: 'mock' | 'gas'
   readonly gasTransport: 'mock' | 'real'
+  readonly documentStore: DocumentStoreKind
   readonly actaRepository: 'Drive/GAS' | 'mock/local'
   readonly calendarSync: 'real' | 'mock/local'
   readonly googleScriptRunPresent: boolean
@@ -40,23 +52,18 @@ export interface RuntimeEnvironmentSnapshot {
   readonly localDevJsonWarning: boolean
 }
 
-function isStagingBuildFlag(): boolean {
-  const v = import.meta.env.VITE_ETR7_STAGING
-  return v === 'true' || v === '1'
-}
-
 function isNonProductionStagingContext(): boolean {
-  return isStagingBuildFlag() || import.meta.env.DEV
+  return isStagingGasRuntime() || import.meta.env.DEV
 }
 
-/** Banner staging: Web App GAS + JSON/hybrid + entorno no producción estable. */
+/** Banner staging: Web App GAS + JSON/hybrid + flag staging. */
 export function shouldShowStagingEnvironmentBanner(): boolean {
-  if (import.meta.env.MODE !== 'gas') return false
+  if (!isStagingGasRuntime()) return false
   if (!usesJsonPersistence()) return false
   return isNonProductionStagingContext()
 }
 
-/** Aviso local-dev: JSON/hybrid con transporte mock (npm run dev). */
+/** Aviso local-dev: JSON/hybrid con transporte mock (`npm run dev`). */
 export function shouldShowLocalDevJsonWarning(): boolean {
   if (!isLocalSpaDevMode()) return false
   return usesJsonPersistence()
@@ -66,12 +73,15 @@ export function getRuntimeEnvironmentSnapshot(): RuntimeEnvironmentSnapshot {
   const localDev = isLocalSpaDevMode()
   const persistence = getActaPersistenceMode()
   const jsonPersistence = usesJsonPersistence(persistence)
+  const store = getDocumentStoreKind()
 
   return {
+    profile: getRuntimeProfile(),
     viteMode: import.meta.env.MODE,
     persistence,
     matchReportService: getMatchReportServiceMode(),
-    gasTransport: localDev ? 'mock' : 'real',
+    gasTransport: getGasTransportKind(),
+    documentStore: store,
     actaRepository: localDev && jsonPersistence ? 'mock/local' : 'Drive/GAS',
     calendarSync: localDev ? 'mock/local' : 'real',
     googleScriptRunPresent: isGasScriptHostAvailable(),
@@ -94,7 +104,7 @@ export function assertRuntimeEnvironment(): readonly RuntimeEnvironmentIssue[] {
       code: 'LOCAL_DEV_WITH_JSON_PERSISTENCE',
       severity: 'warning',
       message:
-        'JSON persistence running in LOCAL DEV MOCK MODE — use npm run build:gas and Web App GAS for federative staging.',
+        'JSON persistence en LOCAL DEV (fakeDrive). Para staging GAS real: npm run staging:gas y abrir la Web App Apps Script.',
     })
   }
 
@@ -103,7 +113,16 @@ export function assertRuntimeEnvironment(): readonly RuntimeEnvironmentIssue[] {
       code: 'MISSING_GOOGLE_SCRIPT_RUN',
       severity: 'warning',
       message:
-        'google.script.run no detectado — abrir la SPA desde la Web App Apps Script, no localhost/preview.',
+        'google.script.run no detectado — abrir la SPA desde la Web App Apps Script (no localhost ni vite preview).',
+    })
+  }
+
+  if (isStagingGasRuntime() && !snapshot.googleScriptRunPresent) {
+    issues.push({
+      code: 'STAGING_OPENED_OUTSIDE_GAS_HOST',
+      severity: 'warning',
+      message:
+        'Build staging-gas abierto fuera del host GAS — Encounter Workspace requiere google.script.run.',
     })
   }
 
@@ -120,7 +139,7 @@ export function assertRuntimeEnvironment(): readonly RuntimeEnvironmentIssue[] {
       code: 'LEGACY_PERSISTENCE_ON_GAS_BUILD',
       severity: 'info',
       message:
-        'Build GAS con persistencia legacy — no se ejercita JSON/hybrid hasta VITE_ETR7_ACTA_PERSISTENCE=hybrid|json.',
+        'Build GAS con persistencia legacy — no se ejercita Encounter Workspace hasta VITE_ETR7_ACTA_PERSISTENCE=hybrid|json.',
     })
   }
 
@@ -141,12 +160,16 @@ export function assertRuntimeEnvironment(): readonly RuntimeEnvironmentIssue[] {
 
 /** Log único de arranque con capacidades reales esperadas. */
 export function logRuntimeStartup(): void {
+  logRuntimeProfileStartup()
+
   const s = getRuntimeEnvironmentSnapshot()
   const lines: Record<string, string> = {
+    Profile: s.profile,
     MODE: s.viteMode,
     Persistence: s.persistence,
     MatchReportService: s.matchReportService,
     GasTransport: s.gasTransport,
+    DocumentStore: s.documentStore,
     ActaRepository: s.actaRepository,
     CalendarSync: s.calendarSync,
     GoogleScriptRun: s.googleScriptRunPresent ? 'present' : 'missing',
@@ -155,10 +178,21 @@ export function logRuntimeStartup(): void {
 
   log.debug(`${RUNTIME_LOG} startup`, lines)
 
-  if (import.meta.env.MODE === 'gas' && usesJsonPersistence()) {
+  if (s.profile === 'staging-gas') {
     // eslint-disable-next-line no-console -- arranque staging: siempre visible en consola Web App
     console.info(
-      `${RUNTIME_LOG} MODE=gas Persistence=${s.persistence} CalendarSync=real ActaRepository=Drive`,
+      `${RUNTIME_LOG} staging-gas Persistence=${s.persistence} Store=${s.documentStore} Transport=real`,
+    )
+    // eslint-disable-next-line no-console
+    console.info(
+      '[STAGING-RUNTIME] startup WebApp documental — use window.__ETR7_DOC__ y RUNTIME_DOCUMENTAL_STAGING_CHECKLIST.md',
+    )
+  }
+
+  if (s.profile === 'production') {
+    // eslint-disable-next-line no-console
+    console.info(
+      `${RUNTIME_LOG} production Persistence=${s.persistence} Store=${s.documentStore} Transport=real`,
     )
   }
 }

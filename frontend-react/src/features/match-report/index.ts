@@ -13,6 +13,7 @@ export type {
 export { MatchReportProvider } from './context/MatchReportProvider'
 export { useMatchReportContext } from './context/useMatchReportContext'
 export { useMatchReport } from './hooks/useMatchReport'
+export { useActaDocument } from './hooks/useActaDocument'
 export { useMatchReportLoad } from './hooks/useMatchReportLoad'
 export { useMatchReportActions } from './hooks/useMatchReportActions'
 export { useMatchReportForm } from './hooks/useMatchReportForm'
@@ -59,6 +60,40 @@ export {
   selectMatchHelpContent,
   selectShowOperationBanner,
 } from './selectors/matchReportValidationUxSelectors'
+
+export {
+  selectActaBinding,
+  selectAlignmentSnapshots,
+  selectDocumentRuntime,
+  selectIsSuperseded,
+  selectRuntimeReconcileFindings,
+  selectRuntimeStaleState,
+  selectSupersededState,
+  selectWorkspaceMetadata,
+  selectWorkspaceVersion,
+} from './selectors/matchReportDocumentSelectors'
+
+export {
+  selectLineupAlignmentRefs,
+  selectLineupIsSuperseded,
+  selectLineupSnapshots,
+  selectLineupStaleState,
+  selectLineupSupersededState,
+  selectLineupTeamViews,
+} from './selectors/lineupDocumentSelectors'
+
+export { loadDocumentRuntime } from './services/documentRuntimeLoad.service'
+export {
+  commitDocumentRuntimeLoad,
+  clearDocumentRuntimeStore,
+  getDocumentRuntimeEntry,
+} from './domain/documentRuntimeStore'
+
+export type {
+  MatchReportDocumentRuntimeState,
+  RuntimeStaleState,
+  RuntimeSupersededState,
+} from './types/matchReportDocumentRuntime.types'
 
 export {
   getMatchReportServiceMode,

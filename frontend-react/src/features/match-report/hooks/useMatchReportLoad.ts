@@ -7,6 +7,12 @@ import { buildOperationFailurePayload } from '../utils/operationDispatch'
 import { matchContextLoadKey } from '../utils/matchReportQuery'
 import { ensurePenaltyTryPlayersOnReport } from '../presentation/penaltyTryPlayer'
 import { matchReportRuntimeLog } from '../utils/runtimeLogger'
+import {
+  assertRuntimeDocumentConsistency,
+  observeDocumentRuntimeOperation,
+} from '../tools/observeDocumentRuntimeStaging'
+import { logStagingStale, shouldLogStagingRuntime } from '../tools/stagingRuntimeLogger'
+import { prepareDocumentRuntimeForEncounter } from '../domain/documentRuntimeNavigation'
 import { useMatchReportStateRef } from './useMatchReportStateRef'
 import { useOperationInFlight } from './useOperationInFlight'
 
@@ -31,6 +37,12 @@ export function useMatchReportLoad() {
         return
       }
 
+      const prevId = stateRef.current.context?.encuentroId ?? null
+      if (options?.force) {
+        prepareDocumentRuntimeForEncounter(context.encuentroId, prevId)
+      } else if (prevId && prevId !== context.encuentroId) {
+        prepareDocumentRuntimeForEncounter(context.encuentroId, prevId)
+      }
       dispatch({ type: 'LOAD_REPORT', payload: { request: { context } } })
       try {
         const result = await loadMatchReportForRuntimeSafe({ context })
@@ -47,6 +59,15 @@ export function useMatchReportLoad() {
             encuentroId: context.encuentroId,
             loadKey: matchContextLoadKey(context),
           })
+          if (shouldLogStagingRuntime()) {
+            const consistency = assertRuntimeDocumentConsistency(stateRef.current, context.encuentroId)
+            observeDocumentRuntimeOperation('navigation', {
+              matchId: context.encuentroId,
+              consistencyOk: consistency.ok,
+              superseded: response.document?.superseded.isSuperseded,
+              stale: response.document?.stale.isStale,
+            })
+          }
           return
         }
         const err = result.error

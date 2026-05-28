@@ -5,6 +5,15 @@ import {
   mockActaJsonReadByMatchId,
   mockActaJsonResolveLifecycle,
 } from './mockActaJsonGas'
+import {
+  mockAlignmentJsonAtomicWrite,
+  mockAlignmentJsonAtomicWriteIndex,
+  mockAlignmentJsonBootstrapPlayersFromSheets,
+  mockAlignmentJsonProbeDocument,
+  mockAlignmentJsonReadByStorageKey,
+  mockAlignmentJsonReadIndexByContext,
+  mockAlignmentJsonRebuildIndex,
+} from './mockAlignmentJsonGas'
 import { LOCAL_DEV_CREDENTIAL_HINT, mockAuthLoginV2Response } from './mockAuthLogin'
 import { mockCalendarGetMatchesV2Response } from './mockCalendarMatches'
 import { mockCalendarSyncApplyBundle } from './mockCalendarSyncGas'
@@ -41,6 +50,22 @@ export async function dispatchLocalDevMockGasCall(
       return mockActaJsonAtomicWrite(args[0] as Parameters<typeof mockActaJsonAtomicWrite>[0])
     case 'calendarSync_applyBundle':
       return mockCalendarSyncApplyBundle(args[0])
+    case 'alignmentJson_probeDocument':
+      return mockAlignmentJsonProbeDocument(args[0] as Parameters<typeof mockAlignmentJsonProbeDocument>[0])
+    case 'alignmentJson_readByStorageKey':
+      return mockAlignmentJsonReadByStorageKey(args[0] as Parameters<typeof mockAlignmentJsonReadByStorageKey>[0])
+    case 'alignmentJson_atomicWrite':
+      return mockAlignmentJsonAtomicWrite(args[0] as Parameters<typeof mockAlignmentJsonAtomicWrite>[0])
+    case 'alignmentJson_readIndexByContext':
+      return mockAlignmentJsonReadIndexByContext(args[0] as Parameters<typeof mockAlignmentJsonReadIndexByContext>[0])
+    case 'alignmentJson_atomicWriteIndex':
+      return mockAlignmentJsonAtomicWriteIndex(args[0] as Parameters<typeof mockAlignmentJsonAtomicWriteIndex>[0])
+    case 'alignmentJson_rebuildIndex':
+      return mockAlignmentJsonRebuildIndex(args[0] as Parameters<typeof mockAlignmentJsonRebuildIndex>[0])
+    case 'alignmentJson_bootstrapPlayersFromSheets':
+      return mockAlignmentJsonBootstrapPlayersFromSheets(
+        args[0] as Parameters<typeof mockAlignmentJsonBootstrapPlayersFromSheets>[0],
+      )
     default:
       log.warn('localDev.mock.unhandled', { functionName, hint: 'Añadir handler en mockGasHandlers.ts' })
       throw new Error(

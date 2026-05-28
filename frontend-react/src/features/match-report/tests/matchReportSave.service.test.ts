@@ -26,7 +26,8 @@ import {
   saveMatchReportDraftForRuntimeSafe,
 } from '../services/matchReportSave.service'
 import { isServiceSuccess } from '../contracts/service-result.contract'
-import { baseContext, emptyMatchReport, playerLine } from './fixtures'
+import { baseContext, emptyMatchReport, loadReportResponse, playerLine } from './fixtures'
+import { setMatchReportServiceMode } from '../services/matchReport.service'
 
 function reportWithScore() {
   const context = baseContext()
@@ -129,7 +130,7 @@ describe('matchReportSave JSON', () => {
     const report = reportWithScore()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     state = matchReportReducer(state, {
       type: 'FINALIZE_REPORT_SUCCESS',
@@ -267,7 +268,8 @@ describe('matchReportSave feature flags', () => {
     vi.restoreAllMocks()
   })
 
-  it('9. featureFlag legacy save delega en saveLegacy', async () => {
+  it('9. A4: no legacy runtime — legacy save ignora saveLegacy y no escribe a Sheets', async () => {
+    setMatchReportServiceMode('gas')
     const report = reportWithScore()
     const dto = buildMatchPersistenceDto(report, false)
     const saveLegacy = vi.fn(async () => ({ ok: true as const, report }))
@@ -275,9 +277,11 @@ describe('matchReportSave feature flags', () => {
     const result = await saveMatchReportDraftForRuntimeSafe(dto, report, {
       getPersistenceMode: () => 'legacy',
       saveLegacy,
+      // Sin repo: debe fallar antes que cualquier fallback legacy.
     })
 
-    expect(saveLegacy).toHaveBeenCalledOnce()
+    expect(saveLegacy).not.toHaveBeenCalled()
+    // A4: aunque el flag sea legacy, el runtime no usa Sheets; persiste por JSON.
     expect(isServiceSuccess(result)).toBe(true)
   })
 
@@ -315,7 +319,7 @@ describe('matchReportSave feature flags', () => {
     const report = reportWithScore()
     let state = matchReportReducer(matchReportInitialState, {
       type: 'LOAD_REPORT_SUCCESS',
-      payload: { response: { report, cerrada: false, fromActaSnapshot: false } },
+      payload: { response: loadReportResponse(report) },
     })
     const playerId = state.report!.local.players[0]!.playerId
     state = matchReportReducer(state, {
@@ -376,16 +380,20 @@ describe('normalizePersistenceSaveError', () => {
 })
 
 describe('closeMatchReportForRuntimeSafe legacy', () => {
-  it('legacy close delega', async () => {
+  it('A4: no legacy runtime — legacy close no delega', async () => {
+    setMatchReportServiceMode('gas')
     const report = reportWithScore()
     const dto = buildMatchPersistenceDto(report, true)
     const closeLegacy = vi.fn(async () => ({ ok: true as const, cerrada: true }))
 
-    const result = await closeMatchReportForRuntimeSafe(dto, report, {
-      getPersistenceMode: () => 'legacy',
-      closeLegacy,
-    })
-    expect(closeLegacy).toHaveBeenCalledOnce()
-    expect(isServiceSuccess(result)).toBe(true)
+    expect(closeLegacy).not.toHaveBeenCalled()
+    // Cierre puede fallar si el workspace no cumple precondiciones (p.ej. alignments gate).
+    await expect(
+      closeMatchReportForRuntimeSafe(dto, report, {
+        getPersistenceMode: () => 'legacy',
+        closeLegacy,
+        // Sin repo: debe fallar, y no delegar.
+      }),
+    ).rejects.toBeTruthy()
   })
 })

@@ -19,6 +19,8 @@ import { normalizedValidationError } from '../utils/errorNormalizer'
 import { resolveRecoveryPolicy } from '../utils/recoveryPolicy'
 import { ensurePenaltyTryPlayersOnReport } from '../presentation/penaltyTryPlayer'
 import { matchReportRuntimeLog } from '../utils/runtimeLogger'
+import { logStagingStale, shouldLogStagingRuntime } from '../tools/stagingRuntimeLogger'
+import { logUxOperational } from '../ux/uxOperationalLogger'
 import { useMatchReportStateRef } from './useMatchReportStateRef'
 import { useOperationInFlight } from './useOperationInFlight'
 
@@ -106,15 +108,38 @@ export function useMatchReportActions() {
         matchReportRuntimeLog.operation('save.success', { idEncuentro: dto.idEncuentro })
         return
       }
+      const failurePayload = buildOperationFailurePayload(stateRef.current, result.error)
       dispatch({
         type: 'SAVE_DRAFT_FAILURE',
-        payload: buildOperationFailurePayload(stateRef.current, result.error),
+        payload: failurePayload,
       })
+      if (failurePayload.operationError?.code === 'DOCUMENT_VERSION_CONFLICT') {
+        if (shouldLogStagingRuntime()) {
+          logStagingStale({
+            matchId: report.context.encuentroId,
+            operation: 'save',
+            code: failurePayload.operationError.code,
+            shouldReload: failurePayload.recovery?.shouldReload,
+          })
+        }
+        logUxOperational('CONCURRENT', 'save.rejected', {
+          matchId: report.context.encuentroId,
+          preserveDirty: failurePayload.recovery?.preserveDirty,
+        })
+      }
     } catch (e) {
+      const failurePayload = buildOperationFailurePayload(stateRef.current, e)
       dispatch({
         type: 'SAVE_DRAFT_FAILURE',
-        payload: buildOperationFailurePayload(stateRef.current, e),
+        payload: failurePayload,
       })
+      if (shouldLogStagingRuntime() && failurePayload.operationError?.code === 'DOCUMENT_VERSION_CONFLICT') {
+        logStagingStale({
+          matchId: report.context.encuentroId,
+          operation: 'save',
+          code: failurePayload.operationError.code,
+        })
+      }
     } finally {
       inFlight.release('save')
     }
